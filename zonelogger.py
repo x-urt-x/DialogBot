@@ -8,6 +8,7 @@ class LogZone(IntFlag):
     YAML = 1 << 1
     DB   = 1 << 2
     NET  = 1 << 3
+    DIALOG_HANDLERS = 1 << 4
 
 # Человеческие названия зон
 ZONE_NAMES = {
