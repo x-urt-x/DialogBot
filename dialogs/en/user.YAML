@@ -1,0 +1,46 @@
+text: "welcome"
+triggers:
+    - info; about:
+        text: "i am university bot"
+    - add personal info:
+        id: "AddPInfo"
+        text: "what kind of info u would add?"
+        triggers:
+        - name:
+            freeInputID: "enterName"
+            text: "enter ur name"
+            cmd_triggers:
+                - good:
+                    text: "name accepted"
+                    ref: -2
+                - bad:
+                    text: "bad name"
+                    ref: -1
+        - surname:
+            freeInputID: "enterSurName"
+            text: "enter ur surname"
+            cmd_triggers:
+                - good:
+                    text: "surname accepted"
+                    ref: -2
+                - bad:
+                    text: "bad surname"
+                    ref: -1        
+        - lastname:
+            freeInputID: "enterLastName"
+            text: "enter ur lastname"
+            cmd_triggers:
+                - good:
+                    text: "lastname accepted"
+                    ref: -2
+                - bad:
+                    text: "bad lastname"
+                    ref: -1
+    - support:
+         text: "here u can get human support. u can add personal info for better answers"
+         triggers:
+            - add info:
+                ref: "AddPInfo"
+            - write msg:
+                id: "supportMessage"
+                text: "*recomindations*"
