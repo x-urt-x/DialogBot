@@ -1,24 +1,24 @@
 text: "welcome back, Admin"
 triggers:
   - set role:
-    freeInputID: "setRole"
-    text: "enter user id"
-    cmd_triggers:
-      - good: 
-        text: "select role"
-        triggers:
-          - -user:
-            cmdID: "delRoleUser"
-            ref: -3
-          - +user:
-            cmdID: "setRoleUser"
-            ref: -3
-          - -support:
-            cmdID: "delRoleSupport"
-            ref: -3
-          - +support:
-            cmdID: "setRoleSupport"
-            ref: -3
-      - bad:
-        text: "no such user"
-        ref: -1
+      freeInput_id: "setRole"
+      text: "enter user id"
+      cmd_triggers:
+        - good:
+            text: "select role"
+            triggers:
+              - -user:
+                  cmd_id: "delRoleUser"
+                  ref: -3
+              - +user:
+                  cmd_id: "setRoleUser"
+                  ref: -3
+              - -support:
+                  cmd_id: "delRoleSupport"
+                  ref: -3
+              - +support:
+                  cmd_id: "setRoleSupport"
+                  ref: -3
+        - bad:
+            text: "no such user"
+            ref: -1

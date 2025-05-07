@@ -1,33 +1,37 @@
 triggers:
   - back:
-    ref: -2
+      ref: -2
   - main:
-    ref: 0
+      ref: 0
+  - hi:
+      cmd_id: "hi"
+      text: "hi"
+      ref: -1
   - change role; role:
-    id: "changeRole"
-    text: "select role"
-    triggers:
-      - user:
-        id: "changeRoleToUser"
-        cmd_triggers:
-          - forbidden:
-            text: "u dont have permision"
-            ref: -2
-          - allowed:
-            ref: 0
-      - admin:
-        id: "changeRoleToAdmin"
-        cmd_triggers:
-          - forbidden:
-            text: "u dont have permision"
-            ref: -2
-          - allowed:
-            ref: 0
-      - support:
-        id: "changeRoleToSupport"
-        cmd_triggers:
-          - forbidden:
-            text: "u dont have permision"
-            ref: -2
-          - allowed:
-            ref: 0
+      ref_id: "changeRole"
+      text: "select role"
+      triggers:
+        - user:
+            cmd_id: "changeRoleToUser"
+            cmd_triggers:
+              - forbidden:
+                  text: "u dont have permision"
+                  ref: -2
+              - allowed:
+                  ref: 0
+        - admin:
+            cmd_id: "changeRoleToAdmin"
+            cmd_triggers:
+              - forbidden:
+                  text: "u dont have permision"
+                  ref: -2
+              - allowed:
+                  ref: 0
+        - support:
+            cmd_id: "changeRoleToSupport"
+            cmd_triggers:
+              - forbidden:
+                  text: "u dont have permision"
+                  ref: -2
+              - allowed:
+                  ref: 0
