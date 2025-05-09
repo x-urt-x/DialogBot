@@ -1,0 +1,16 @@
+from abc import ABC, abstractmethod
+from roles import Roles
+from user import User
+
+class IDataBase(ABC):
+    @abstractmethod
+    async def getUser(self, user_id)->User:
+        pass
+
+    @abstractmethod
+    async def setRole(self, user_id, role: Roles):
+        pass
+
+    @abstractmethod
+    async def createUser(self, user_id, user : User):
+        pass
