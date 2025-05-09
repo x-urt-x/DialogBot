@@ -9,6 +9,7 @@ class LogZone(IntFlag):
     DB   = 1 << 2
     NET  = 1 << 3
     DIALOG_HANDLERS = 1 << 4
+    USERS = 1 << 5
 
 # Человеческие названия зон
 ZONE_NAMES = {
@@ -20,7 +21,7 @@ ZONE_NAMES = {
 
 class ZoneLogger:
 
-    active_zones = LogZone.MAIN | LogZone.YAML
+    active_zones = 0
 
     @staticmethod
     def enable_zone(zone):
