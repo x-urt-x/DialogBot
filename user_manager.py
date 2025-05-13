@@ -12,24 +12,27 @@ class UserManager:
         if user_id in self._users:
             logger.debug(LogZone.USERS, f"{user_id} user was in cache")
             return self._users[user_id]
-        user = await self.loadUser(user_id)
+        user = await self._db.getUser(user_id)
         if user:
             logger.debug(LogZone.USERS, f"{user_id} user was in db")
             self._users[user_id] = user
             return user
         logger.debug(LogZone.USERS, f"{user_id} user was not find")
-        user = User()
-        await self._db.createUser(user_id,user)
+        user = User(user_id)
+        await self._db.createUser(user_id,user.to_dict())
         self._users[user_id] = user
         return user
 
-    async def loadUser(self, user_id) -> User:
-        return await self._db.getUser(user_id)
-
     async def setRole(self, user_id, role : Roles) -> bool:
         user = await self.getUser(user_id)
-        if role not in user.availableRoles:
+        if role not in user["availableRoles"]:
             return False
         self._db.setRole(user_id, role)
         self._users[user_id][role] = role
         return True
+
+    async def save_user(self, user_id, user: User):
+        dirty = user.get_dirty_fields()
+        if dirty:
+            await self._db.updateUserData(user_id, dirty)
+            user.clear_dirty()

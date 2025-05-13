@@ -3,6 +3,7 @@ from roles import Roles
 from IDataBase import IDataBase
 from pymongo.errors import PyMongoError
 from zonelogger import logger, LogZone
+from user import User
 
 class MongoDb(IDataBase):
     def __init__(self, connection_string):
@@ -11,13 +12,18 @@ class MongoDb(IDataBase):
         self._users = self._db["users"]
         self._massages = self._db["massages"]
 
-    async def getUser(self, user_id):
+    async def getUser(self, user_id) -> User | None:
         try:
-            result = await self._users.find_one({"user_id": user_id})
-            return result
+            data = await self._users.find_one({"user_id": user_id})
         except PyMongoError as e:
-            logger.info(LogZone.DB, f"cant get {user_id} user: {e}")
+            logger.error(LogZone.DB, f"cant get {user_id} user: {e}")
             return None
+        if data is None:
+            logger.info(LogZone.DB, f"user {user_id} not in db")
+            return None
+        user = User(user_id)
+        user.from_dict(dict(data))
+        return user
 
     async def setRole(self, user_id, role: Roles) -> bool:
         if not isinstance(role, Roles):
@@ -37,19 +43,22 @@ class MongoDb(IDataBase):
             logger.error(LogZone.DB, f"cant update role: {e}")
             return False
 
-    async def createUser(self, user_id, user):
+    async def createUser(self, user_id, data):
         try:
             existing = await self._users.find_one({"user_id": user_id})
             if existing:
                 return False
-            user_data = {
-                "user_id": user_id,
-                "role": user.role.value,
-                "availableRoles": [role.value for role in getattr(user, "availableRoles", [Roles.USER])],
-                "fields": {api_id.value: val for api_id, val in user.tmp_fields.items()}
-            }
-            result = await self._users.insert_one(user_data)
+            data["user_id"] = user_id
+            result = await self._users.insert_one(data)
             return result.acknowledged
         except PyMongoError as e:
             logger.error(LogZone.DB, f"cant create user: {e}")
             return False
+
+    async def updateUserData(self, user_id, data: dict):
+        if not data:
+            return
+        await self._users.update_one(
+            {"user_id": user_id},
+            {"$set": data}
+        )

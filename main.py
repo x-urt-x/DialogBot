@@ -17,11 +17,13 @@ async def main():
     mongoDB = MongoDb("localhost:27017")
     user_manager = UserManager(mongoDB)
 
-    user1: User = await user_manager.getUser("111")
-    user1.tmp_fields.setdefault(ApiId.Console, {})["name"] = "name"
+    user_id_1 = "111"
+    user1: User = await user_manager.getUser(user_id_1)
+    #user1["name"] = "test name"
+    await user_manager.save_user(user_id_1, user1)
     user2: User = await user_manager.getUser("222")
-    logger.info(LogZone.MAIN, user1)
-    logger.info(LogZone.MAIN, user2)
+    logger.info(LogZone.MAIN, user1.to_dict())
+    logger.info(LogZone.MAIN, user2.to_dict())
 
 if __name__ == "__main__":
     asyncio.run(main())

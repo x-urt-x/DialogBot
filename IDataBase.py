@@ -12,5 +12,9 @@ class IDataBase(ABC):
         pass
 
     @abstractmethod
-    async def createUser(self, user_id, user : User):
+    async def createUser(self, user_id, data : dict):
+        pass
+
+    @abstractmethod
+    async def updateUserData(self, user_id, data:dict):
         pass

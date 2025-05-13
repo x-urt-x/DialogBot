@@ -17,6 +17,8 @@ ZONE_NAMES = {
     LogZone.YAML: "YAML",
     LogZone.DB:   "DB",
     LogZone.NET:  "NET",
+    LogZone.DIALOG_HANDLERS:  "DIALOG_HANDLERS",
+    LogZone.USERS:  "USERS",
 }
 
 class ZoneLogger:
