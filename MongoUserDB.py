@@ -1,14 +1,14 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from roles import Roles
-from IDataBase import IDataBase
+from IUserDB import IDataBase
 from pymongo.errors import PyMongoError
 from zonelogger import logger, LogZone
 from user import User
 
-class MongoDb(IDataBase):
-    def __init__(self, connection_string):
+class MongoUserDB(IDataBase):
+    def __init__(self, connection_string, db_name):
         self._client = AsyncIOMotorClient(connection_string)
-        self._db = self._client["dialog_bot"]
+        self._db = self._client[db_name]
         self._users = self._db["users"]
         self._massages = self._db["massages"]
 

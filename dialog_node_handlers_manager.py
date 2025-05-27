@@ -7,7 +7,7 @@ handler_registry = defaultdict(dict)
 def dialog_node_reg(lang : Language, id_):
     def decorator(fn):
         if id_ in handler_registry[lang]:
-            logger.warning(LogZone.DIALOG_HANDLERS,"Handler '{id_}' already registered for language '{lang}'")
+            logger.warning(LogZone.DIALOG_HANDLERS,f"Handler '{id_}' already registered for language '{lang}'")
         handler_registry[lang][id_] = fn
         return fn
     return decorator

@@ -10,6 +10,7 @@ class LogZone(IntFlag):
     NET  = 1 << 3
     DIALOG_HANDLERS = 1 << 4
     USERS = 1 << 5
+    MESSAGE_PROCESS = 1 << 6
 
 # Человеческие названия зон
 ZONE_NAMES = {
@@ -19,6 +20,7 @@ ZONE_NAMES = {
     LogZone.NET:  "NET",
     LogZone.DIALOG_HANDLERS:  "DIALOG_HANDLERS",
     LogZone.USERS:  "USERS",
+    LogZone.MESSAGE_PROCESS: "MESSAGE_PROCESS"
 }
 
 class ZoneLogger:

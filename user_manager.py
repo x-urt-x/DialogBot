@@ -1,5 +1,5 @@
 from roles import Roles
-import IDataBase
+from IUserDB import IDataBase
 from user import User
 from zonelogger import logger, LogZone
 
@@ -25,14 +25,14 @@ class UserManager:
 
     async def setRole(self, user_id, role : Roles) -> bool:
         user = await self.getUser(user_id)
-        if role not in user["availableRoles"]:
+        if role not in user["roles"]:
             return False
-        self._db.setRole(user_id, role)
-        self._users[user_id][role] = role
+        await self._db.setRole(user_id, role)
+        self._users[user_id]["role"] = role
         return True
 
-    async def save_user(self, user_id, user: User):
+    async def save_users_dirty(self, user: User):
         dirty = user.get_dirty_fields()
         if dirty:
-            await self._db.updateUserData(user_id, dirty)
+            await self._db.updateUserData(user.getId(), dirty)
             user.clear_dirty()

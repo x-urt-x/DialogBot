@@ -4,12 +4,17 @@ import os
 from dataclasses import dataclass, field
 from dialog_node_handlers_manager import handler_registry
 from typing import Any
+from IDialogLoader import IDialogLoader
+from roles import Roles
 
-class YAMLLoader:
+class YAMLLoader(IDialogLoader):
     def __init__(self):
         self.id_counter = 1 #для разделения работы ref
         self.ref_id_dict = {}
         self.dialog_nodes = {}
+
+    def getNodes(self):
+        return self.dialog_nodes
 
     def _get_next_node_id(self):
         id = self.id_counter
@@ -27,7 +32,17 @@ class YAMLLoader:
                     try:
                         with open(full_path, 'r', encoding='utf-8') as f:
                             data = yaml.safe_load(f)
-                            self._make_node(self._get_next_node_id(), data)
+                            file_role = 0
+                            match os.path.splitext(file)[0]:
+                                case "admin":
+                                    file_role = Roles.ADMIN
+                                case "user":
+                                    file_role = Roles.USER
+                                case "support":
+                                    file_role = Roles.SUPPORT
+                                case "banned":
+                                    file_role = Roles.BANNED
+                            self._make_node(self._get_next_node_id(), data, file_role)
                     except Exception as e:
                         logger.error(LogZone.YAML,f"cant load file {full_path}: {e}")
         for node_id, node in self.dialog_nodes.items():
@@ -47,9 +62,9 @@ class YAMLLoader:
         for node_id, node in self.ref_id_dict.items():
             logger.debug(LogZone.YAML, f"{node_id}: {node}")
 
-    def _make_node(self, node_id, node_data):
+    def _make_node(self, node_id, node_data, file_role: Roles):
         if node_data:
-            node = {}
+            node = {"role":file_role}
             for key, value in node_data.items():
                 match key:
                     case "triggers":
@@ -57,7 +72,7 @@ class YAMLLoader:
                         for trigger in value:
                             [(in_keys, in_value)] = trigger.items()
                             in_node_id = self._get_next_node_id()
-                            self._make_node(in_node_id,in_value)
+                            self._make_node(in_node_id,in_value, file_role)
                             in_keys_list = [k.strip() for k in in_keys.split(';')]
                             for in_key in in_keys_list:
                                 node["triggers"][in_key] = in_node_id
@@ -66,7 +81,7 @@ class YAMLLoader:
                         for cmd_trigger in value:
                             [(in_keys, in_value)] = cmd_trigger.items()
                             in_node_id = self._get_next_node_id()
-                            self._make_node(in_node_id,in_value)
+                            self._make_node(in_node_id,in_value, file_role)
                             in_keys_list = [k.strip() for k in in_keys.split(';')]
                             for in_key in in_keys_list:
                                 node["cmd_triggers"][in_key] = in_node_id
@@ -75,6 +90,16 @@ class YAMLLoader:
                             node["cmd_handler"] = handler_registry[value]
                         else:
                             logger.warning(LogZone.YAML,f"cmd_handler was missed for {node_id} node")
+                    case "answer_id":
+                        if value in handler_registry:
+                            node["answer_handler"] = handler_registry[value]
+                        else:
+                            logger.warning(LogZone.YAML,f"answer_handler was missed for {node_id} node")
+                    case "message_preprocess_id":
+                        if value in handler_registry:
+                            node["message_preprocess_handler"] = handler_registry[value]
+                        else:
+                            logger.warning(LogZone.YAML,f"message_preprocess_handler was missed for {node_id} node")
                     case "freeInput_id":
                         if value in handler_registry:
                             node["freeInput_handler"] = handler_registry[value]
