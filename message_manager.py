@@ -99,7 +99,7 @@ class MessageManager(IMessageManager):
         answer.text.append(new_node.get("text", ""))  # текстов ответа может быть несколько
         answer.hints = list(triggers.keys())  # дальнейшие подсказки только от последнего
         ref_id = new_node.get("ref")
-        if ref_id:
+        if ref_id is not None:
             if ref_id > 0:
                 await self._openNode(user, ref_id, answer)
             else:
