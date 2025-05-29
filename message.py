@@ -1,7 +1,7 @@
 from api_ids import ApiId
 
 class Message:
-    def __init__(self, text, apiId: ApiId, meta_data):
+    def __init__(self, text, apiId: ApiId, meta_data: dict | None):
         self.text = text
         self.meta_data = {apiId: meta_data}
 

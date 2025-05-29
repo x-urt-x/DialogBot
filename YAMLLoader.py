@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from zonelogger import logger, LogZone
 import yaml
 import os
@@ -9,16 +11,23 @@ from roles import Roles
 
 class YAMLLoader(IDialogLoader):
     def __init__(self):
-        self.id_counter = 1 #для разделения работы ref
-        self.ref_id_dict = {}
-        self.dialog_nodes = {}
+        self._id_counter = 1 #для разделения работы ref
+        self._ref_id_dict = {}
+        self._dialog_nodes = {}
+        self._root_nodes: dict[Roles, int] = {}
 
     def getNodes(self):
-        return self.dialog_nodes
+        return self._dialog_nodes
+
+    def getNode(self, id):
+        return self._dialog_nodes.get(id)
+
+    def getRootNodeId(self, role: Roles):
+        return self._root_nodes[role]
 
     def _get_next_node_id(self):
-        id = self.id_counter
-        self.id_counter += 1
+        id = self._id_counter
+        self._id_counter += 1
         return id
 
     def load_folder(self, folder_path):
@@ -32,6 +41,7 @@ class YAMLLoader(IDialogLoader):
                     try:
                         with open(full_path, 'r', encoding='utf-8') as f:
                             data = yaml.safe_load(f)
+                            root_node_id = self._get_next_node_id()
                             file_role = 0
                             match os.path.splitext(file)[0]:
                                 case "admin":
@@ -42,24 +52,27 @@ class YAMLLoader(IDialogLoader):
                                     file_role = Roles.SUPPORT
                                 case "banned":
                                     file_role = Roles.BANNED
-                            self._make_node(self._get_next_node_id(), data, file_role)
+                                case "global":
+                                    file_role = Roles.GLOBAL
+                            self._root_nodes[file_role] = root_node_id
+                            self._make_node(root_node_id, data, file_role)
                     except Exception as e:
                         logger.error(LogZone.YAML,f"cant load file {full_path}: {e}")
-        for node_id, node in self.dialog_nodes.items():
+        for node_id, node in self._dialog_nodes.items():
             if "ref" in node:
                 ref = node["ref"]
                 if isinstance(ref, str):
-                    ref_node_id = self.ref_id_dict[ref]
+                    ref_node_id = self._ref_id_dict[ref]
                     if ref_node_id:
                         node["ref"] = ref_node_id
                     else:
                         logger.error(LogZone.YAML,f"ref was missed for {node_id} node")
 
         logger.debug(LogZone.YAML, "all nodes")
-        for node_id, node in self.dialog_nodes.items():
+        for node_id, node in self._dialog_nodes.items():
             logger.debug(LogZone.YAML, f"{node_id}: {node}")
         logger.debug(LogZone.YAML, "ref id dict")
-        for node_id, node in self.ref_id_dict.items():
+        for node_id, node in self._ref_id_dict.items():
             logger.debug(LogZone.YAML, f"{node_id}: {node}")
 
     def _make_node(self, node_id, node_data, file_role: Roles):
@@ -106,10 +119,10 @@ class YAMLLoader(IDialogLoader):
                         else:
                             logger.warning(LogZone.YAML,f"freeInput_handler was missed for {node_id} node")
                     case "ref_id":
-                        self.ref_id_dict[value] = node_id
+                        self._ref_id_dict[value] = node_id
                     case default:
                         node[key] = value
-            self.dialog_nodes[node_id] = node
+            self._dialog_nodes[node_id] = node
 
 @dataclass
 class Dialog_Node:

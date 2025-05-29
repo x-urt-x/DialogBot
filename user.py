@@ -5,7 +5,7 @@ from roles import Roles
 class User:
     def __init__(self, user_id: str, role: Roles = Roles.USER):
         self._id = user_id
-        self._data = {"role": Roles.USER, "roles": Roles.USER, "dialog_stack": []}
+        self._data = {"role": Roles.USER, "roles": Roles.USER | Roles.GLOBAL, "dialog_stack": []}
         self._tmp_fields: dict[ApiId, Any] = {}
         self._dirty: set[str] = set()
 
