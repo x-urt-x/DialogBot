@@ -52,7 +52,7 @@ class TelegramApiManager:
         keyboard = []
         payload = {"chat_id": chat_id}
         if response.text:
-            payload["text"] = response.text[0]
+            payload["text"] = "\n\n".join(msg for msg in response.text if msg)
         else:
             payload["text"] = "no text for u"
         if response.hints:

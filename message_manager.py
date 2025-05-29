@@ -11,6 +11,9 @@ class MessageManager(IMessageManager):
     def __init__(self, dialogLoader: IDialogLoader, userManager: UserManager):
         self._dialogLoader = dialogLoader
         self._userManager = userManager
+        global_node_id = self._dialogLoader.getRootNodeId(Roles.GLOBAL)
+        global_node = self._dialogLoader.getNode(global_node_id)
+        self._global_triggers = global_node.get("triggers")
 
     async def process(self, user: User, message: Message, answer: Answer):
         #get node
@@ -37,17 +40,23 @@ class MessageManager(IMessageManager):
         #process ref check perm
         #move on dialogs if needed
 
-    @staticmethod
-    async def _processInputHandlers(user: User, message: Message, current_node):
+    async def _processInputHandlers(self, user: User, message: Message, current_node):
         message_preprocess_handler = current_node.get("message_preprocess_handler")
         if message_preprocess_handler:
             await message_preprocess_handler(user.to_dict(), MessageView(message, can_edit_text=True))
-        triggers = current_node.get("triggers")
-        cmd_triggers = current_node.get("cmd_triggers")
+        triggers = current_node.get("triggers", {})
+        if self._global_triggers:
+            for key, value in self._global_triggers.items():
+                triggers.setdefault(key, value)
         if triggers:
             matched_trigger = triggers.get(message.text)
             if matched_trigger:
                 return matched_trigger
+        cmd_triggers = current_node.get("cmd_triggers")
+        if cmd_triggers:
+            freeInput_res = await cmd_triggers(user.to_dict(), MessageView(message), cmd_triggers)
+            if freeInput_res != 0:
+                return freeInput_res
         freeInput_handler = current_node.get("freeInput_handler")
         if freeInput_handler:
             freeInput_res = await freeInput_handler(user.to_dict(), MessageView(message), cmd_triggers)
@@ -83,29 +92,27 @@ class MessageManager(IMessageManager):
         answer_handler = new_node.get("answer_handler")
         if answer_handler:
             new_node["text"] = await answer_handler(user.to_dict(), new_node.get("text", ""))
-        global_node_id = self._dialogLoader.getRootNodeId(Roles.GLOBAL)
-        global_node = self._dialogLoader.getNode(global_node_id)
         triggers = new_node.get("triggers", {})
-        if global_node:
-            global_triggers = global_node.get("triggers")
-            if global_triggers:
-                for key, value in global_triggers.items():
-                    triggers.setdefault(key, value)
+        if self._global_triggers:
+            for key, value in self._global_triggers.items():
+                triggers.setdefault(key, value)
         answer.text.append(new_node.get("text", ""))  # текстов ответа может быть несколько
         answer.hints = list(triggers.keys())  # дальнейшие подсказки только от последнего
         ref_id = new_node.get("ref")
         if ref_id:
-            if ref_id == 0:
-                await self._dialogStackToRoot(user)
-            elif ref_id < 0:
-                dialog_stack = user["dialog_stack"]
-                if -ref_id < len(dialog_stack):
-                    del dialog_stack[-ref_id:]
-                else:
-                    await self._dialogStackToRoot(user)
-                user.setDirty("dialog_stack")
-            else:
+            if ref_id > 0:
                 await self._openNode(user, ref_id, answer)
+            else:
+                if ref_id == 0:
+                    await self._dialogStackToRoot(user)
+                else:
+                    dialog_stack = user["dialog_stack"]
+                    if -ref_id < len(dialog_stack):
+                        del dialog_stack[ref_id:]
+                    else:
+                        await self._dialogStackToRoot(user)
+                back_to_node_id = user["dialog_stack"].pop()
+                await self._openNode(user, back_to_node_id, answer)
         await self._userManager.save_users_dirty(user)
 
     async def _dialogStackToRoot(self, user: User):
