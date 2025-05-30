@@ -25,7 +25,7 @@ class UserManager:
 
     async def setRole(self, user_id, role : Roles) -> bool:
         user = await self.getUser(user_id)
-        if role not in user["roles"]:
+        if not (user["roles"] & role):
             return False
         await self._db.setRole(user_id, role)
         self._users[user_id]["role"] = role
