@@ -6,6 +6,7 @@ from user_manager import UserManager, User
 from MongoUserDB import MongoUserDB
 from message_manager import MessageManager
 from telegramApi import TelegramApiManager
+from consoleApi import ConsoleApi
 from tgToken import tg_token
 import asyncio
 from nodesDict import NodesRootIDs
@@ -41,9 +42,10 @@ async def main():
     message_manager = MessageManager(dialogs, user_manager, messageAnswerQueue)
 
     tg_api = TelegramApiManager(tg_token, "https://ca32-193-179-66-62.ngrok-free.app", user_manager, messageAnswerQueue, "/webhook", 8000)
-
+    console_api = ConsoleApi(user_manager, messageAnswerQueue)
     apiRegistry = ApiRegistry()
     apiRegistry.register(ApiId.TG,tg_api)
+    apiRegistry.register(ApiId.CONSOLE,console_api)
 
     apiManager = ApiManager(apiRegistry)
     apiSendManager = ApiSendManager(messageAnswerQueue, apiRegistry, user_manager)
