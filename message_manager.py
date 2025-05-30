@@ -4,23 +4,34 @@ from user import User
 from zonelogger import logger, LogZone
 from answer import Answer
 from user_manager import UserManager
-from IMessageManager import IMessageManager
 from nodesDict import NodesRootIDs
 from languages import Language
+from messageAnswerQueue import MessageAnswerQueue
 
-class MessageManager(IMessageManager):
-    def __init__(self, dialog_nodes_rootIDs_lang: dict[Language,NodesRootIDs], userManager: UserManager):
+class MessageManager:
+    def __init__(self, dialog_nodes_rootIDs_lang: dict[Language,NodesRootIDs], userManager: UserManager, messageAnswerQueue: MessageAnswerQueue):
         self._dialog_nodes_rootIDs_lang = dialog_nodes_rootIDs_lang
         self._userManager = userManager
+        self._messageAnswerQueue = messageAnswerQueue
 
-    async def process(self, user: User, message: Message, answer: Answer):
+    async def process_queue(self):
+        if self._messageAnswerQueue.incoming.empty():
+            return
+        user, message = await self._messageAnswerQueue.incoming.get()
+        answer =  await self.process(user, message)
+        if answer:
+            await self._messageAnswerQueue.outgoing.put(answer)
+
+    async def process(self, user: User, message: Message)->Answer | None:
+        answer = Answer()
+        answer.to_user_id = user.getId()
         user_lang : Language = user["lang"]
         if not user_lang:
             user_lang = Language.EN
         dialog_nodes_roots : NodesRootIDs | None= self._dialog_nodes_rootIDs_lang.get(user_lang)
         if not dialog_nodes_roots:
             logger.error(LogZone.MESSAGE_PROCESS, f"no {user_lang} lang")
-            return
+            return None
         nodes: dict[int, dict] = dialog_nodes_roots["nodes"]
         #get node
         if not user["dialog_stack"]:
@@ -30,7 +41,7 @@ class MessageManager(IMessageManager):
         current_node = nodes.get(current_node_id)
         if not current_node:
             logger.error(LogZone.MESSAGE_PROCESS, f"no node on {current_node_id} id")
-            return
+            return None
         #check input
         #start handlers
         #get next node
@@ -44,6 +55,7 @@ class MessageManager(IMessageManager):
         #output text
         #process ref check perm
         #move on dialogs if needed
+        return answer
 
     @staticmethod
     async def _processInputHandlers(user: User, message: Message, current_node, dialog_nodes_roots: NodesRootIDs):

@@ -11,7 +11,8 @@ class LogZone(IntFlag):
     DIALOG_HANDLERS = 1 << 4
     USERS = 1 << 5
     MESSAGE_PROCESS = 1 << 6
-    TG_API = 1 << 7
+    TG_API = 1 << 7,
+    API_PROCES = 1 << 8
 
 # Человеческие названия зон
 ZONE_NAMES = {
@@ -22,7 +23,8 @@ ZONE_NAMES = {
     LogZone.DIALOG_HANDLERS:  "DIALOG_HANDLERS",
     LogZone.USERS:  "USERS",
     LogZone.MESSAGE_PROCESS: "MESSAGE_PROCESS",
-    LogZone.TG_API: "TG_API"
+    LogZone.TG_API: "TG_API",
+    LogZone.API_PROCES: "API_PROCES"
 }
 
 class ZoneLogger:

@@ -1,21 +1,41 @@
 from aiohttp import web
 import httpx
-import asyncio
 from answer import Answer
 from message import Message
 from api_ids import ApiId
 from user import User
-from IMessageManager import IMessageManager
 from user_manager import UserManager
 from zonelogger import logger, LogZone
+from IApi import IApiSender, IApiLifecycle
+from messageAnswerQueue import MessageAnswerQueue
 
-class TelegramApiManager:
-    def __init__(self, token: str, public_url: str, message_manager: IMessageManager, user_manager: UserManager,webhook_path: str = "/webhook"):
+class TelegramApiManager(IApiSender, IApiLifecycle):
+    async def send(self, answer: Answer):
+        chat_id = answer.to_user_id.split(":",1)[1]
+        keyboard = []
+        payload = {"chat_id": chat_id}
+        if answer.text:
+            payload["text"] = "\n\n".join(msg for msg in answer.text if msg)
+        else:
+            payload["text"] = "no text for u"
+        if answer.hints:
+            for hint in answer.hints:
+                keyboard.append([{"text": hint}])
+            payload["reply_markup"] = {
+                "keyboard": keyboard,
+                "resize_keyboard": True,
+                "one_time_keyboard": True
+            }
+        async with httpx.AsyncClient() as client:
+            await client.post(f"{self._api_url}/sendMessage", json=payload)
+
+    def __init__(self, token: str, public_url: str, user_manager: UserManager, messageAnswerQueue: MessageAnswerQueue ,webhook_path: str = "/webhook", port: int = 8000):
+        self._port = port
         self._token = token
         self._api_url = f"https://api.telegram.org/bot{token}"
         self._webhook_url = public_url.rstrip("/") + webhook_path
         self._webhook_path = webhook_path
-        self._message_manager = message_manager
+        self._queue = messageAnswerQueue.incoming
         self._user_manager = user_manager
 
         self._app = web.Application()
@@ -40,31 +60,9 @@ class TelegramApiManager:
             user["dialog_stack"] = []
             text = ""
         message = Message(text, ApiId.TG, None)
-        answer : Answer = Answer()
         if chat_id:
-            await self._message_manager.process(user, message, answer)
-
-            await self._send_response(chat_id, answer)
-
+            await self._queue.put((user,message))
         return web.Response(status=200)
-
-    async def _send_response(self, chat_id: int, response: Answer):
-        keyboard = []
-        payload = {"chat_id": chat_id}
-        if response.text:
-            payload["text"] = "\n\n".join(msg for msg in response.text if msg)
-        else:
-            payload["text"] = "no text for u"
-        if response.hints:
-            for hint in response.hints:
-                keyboard.append([{"text": hint}])
-            payload["reply_markup"] = {
-                "keyboard": keyboard,
-                "resize_keyboard": True,
-                "one_time_keyboard": True
-            }
-        async with httpx.AsyncClient() as client:
-            await client.post(f"{self._api_url}/sendMessage", json=payload)
 
     async def set_webhook(self):
         async with httpx.AsyncClient() as client:
@@ -73,14 +71,16 @@ class TelegramApiManager:
                 json={"url": self._webhook_url},
             )
 
-    async def run(self, port: int = 8000):
+    async def run(self):
         await self.set_webhook()
-
         self._runner = web.AppRunner(self._app)
         await self._runner.setup()
-        self._site = web.TCPSite(self._runner, '0.0.0.0', port)
+        self._site = web.TCPSite(self._runner, '0.0.0.0', self._port)
         await self._site.start()
 
-    async def shutdown(self):
+    async def process(self):
+        pass
+
+    async def stop(self):
         if self._runner:
             await self._runner.cleanup()
