@@ -2,7 +2,6 @@ import asyncio
 from answer import Answer
 from message import Message
 from api_ids import ApiId
-from roles import Roles
 from user import User
 from user_manager import UserManager
 from zonelogger import logger, LogZone
@@ -29,9 +28,6 @@ class ConsoleApi(IApiSender, IApiLifecycle):
                     await self.stop()
                     return
                 user: User = await self._user_manager.getUser(f"{ApiId.CONSOLE.value}:local_user")
-                user_roles = user["roles"]
-                if not (user["roles"] & Roles.ADMIN):
-                    user["roles"] = user_roles | Roles.ADMIN
                 if user_input.strip() == "/start":
                     user["dialog_stack"] = []
                     user_input = ""
