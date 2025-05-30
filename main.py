@@ -1,6 +1,6 @@
 from roles import Roles
 from zonelogger import logger, LogZone
-from dialog_node_handlers_manager import handler_registry, load_dialog_node_handlers
+from dialog_node_handlers_manager import DialogNodeHandlersManager
 from YAMLLoader import YAMLLoader
 from user_manager import UserManager, User
 from MongoUserDB import MongoUserDB
@@ -8,22 +8,27 @@ from message_manager import MessageManager
 from telegramApi import TelegramApiManager
 from tgToken import tg_token
 import asyncio
-
-from answer import Answer
-from message import Message
+from nodesDict import NodesRootIDs
+from languages import Language
 
 async def main():
     logger.enable_zone(LogZone.USERS)
     logger.enable_zone(LogZone.TG_API)
     logger.enable_zone(LogZone.MESSAGE_PROCESS)
-    load_dialog_node_handlers()
-    logger.info(LogZone.MAIN, handler_registry)
-    en_dialogs = YAMLLoader()
-    en_dialogs.load_folder("dialogs/en")
+    logger.enable_zone(LogZone.DIALOG_HANDLERS)
+    handlers_manager = DialogNodeHandlersManager("dialog_node_handlers")
+    handlers = handlers_manager.get_all()
+    logger.info(LogZone.MAIN, handlers)
+    dialogs_loader = YAMLLoader(handlers)
+    dialogs : dict[Language,NodesRootIDs] = {
+        Language.EN: dialogs_loader.load_folder("dialogs/en", Language.EN),
+        Language.RU: dialogs_loader.load_folder("dialogs/ru", Language.RU)
+    }
+
     userDB = MongoUserDB("localhost:27017", "dialog_bot")
     user_manager = UserManager(userDB)
-    en_message_manager = MessageManager(en_dialogs, user_manager)
-    tg_api = TelegramApiManager(tg_token, "https://d3fd-193-179-66-62.ngrok-free.app", en_message_manager, user_manager)
+    message_manager = MessageManager(dialogs, user_manager)
+    tg_api = TelegramApiManager(tg_token, "https://e371-193-179-66-62.ngrok-free.app", message_manager, user_manager)
     await tg_api.run()
     print("Telegram API started. Press Ctrl+C to stop.")
     try:

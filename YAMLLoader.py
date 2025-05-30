@@ -1,36 +1,28 @@
-from collections import defaultdict
-
+from typing import Callable, Type, Awaitable
 from zonelogger import logger, LogZone
 import yaml
 import os
 from dataclasses import dataclass, field
-from dialog_node_handlers_manager import handler_registry
 from typing import Any
-from IDialogLoader import IDialogLoader
 from roles import Roles
+from languages import Language
+from handlerTypes import HandlerTypes
+from nodesDict import NodesRootIDs
 
-class YAMLLoader(IDialogLoader):
-    def __init__(self):
+class YAMLLoader():
+    def __init__(self, handlers: dict[HandlerTypes, dict[Language, dict[str, Callable[..., Awaitable[Any]]]]]):
+        self._handlers = handlers
         self._id_counter = 1 #для разделения работы ref
-        self._ref_id_dict = {}
-        self._dialog_nodes = {}
-        self._root_nodes: dict[Roles, int] = {}
-
-    def getNodes(self):
-        return self._dialog_nodes
-
-    def getNode(self, id):
-        return self._dialog_nodes.get(id)
-
-    def getRootNodeId(self, role: Roles):
-        return self._root_nodes[role]
 
     def _get_next_node_id(self):
         id = self._id_counter
         self._id_counter += 1
         return id
 
-    def load_folder(self, folder_path):
+    def load_folder(self, folder_path, lang: Language) ->NodesRootIDs:
+        ref_ids = {}
+        dialog_nodes = {}
+        root_nodesIds: dict[Roles, int] = {}
         root_path = os.path.abspath(os.path.dirname(__file__))
         target_path = os.path.join(root_path, folder_path)
 
@@ -54,28 +46,30 @@ class YAMLLoader(IDialogLoader):
                                     file_role = Roles.BANNED
                                 case "global":
                                     file_role = Roles.GLOBAL
-                            self._root_nodes[file_role] = root_node_id
-                            self._make_node(root_node_id, data, file_role)
+                            root_nodesIds[file_role] = root_node_id
+                            self._make_node(root_node_id, data, file_role, lang, dialog_nodes, ref_ids)
                     except Exception as e:
                         logger.error(LogZone.YAML,f"cant load file {full_path}: {e}")
-        for node_id, node in self._dialog_nodes.items():
+        for node_id, node in dialog_nodes.items():
             if "ref" in node:
                 ref = node["ref"]
                 if isinstance(ref, str):
-                    ref_node_id = self._ref_id_dict[ref]
+                    ref_node_id = ref_ids[ref]
                     if ref_node_id:
                         node["ref"] = ref_node_id
                     else:
                         logger.error(LogZone.YAML,f"ref was missed for {node_id} node")
 
         logger.debug(LogZone.YAML, "all nodes")
-        for node_id, node in self._dialog_nodes.items():
+        for node_id, node in dialog_nodes.items():
             logger.debug(LogZone.YAML, f"{node_id}: {node}")
         logger.debug(LogZone.YAML, "ref id dict")
-        for node_id, node in self._ref_id_dict.items():
+        for node_id, node in ref_ids.items():
             logger.debug(LogZone.YAML, f"{node_id}: {node}")
 
-    def _make_node(self, node_id, node_data, file_role: Roles):
+        return {"nodes": dialog_nodes, "roots": root_nodesIds}
+
+    def _make_node(self, node_id, node_data, file_role: Roles, lang, dialog_nodes, ref_ids: dict[str,int]):
         if node_data:
             node = {"role":file_role}
             for key, value in node_data.items():
@@ -85,7 +79,7 @@ class YAMLLoader(IDialogLoader):
                         for trigger in value:
                             [(in_keys, in_value)] = trigger.items()
                             in_node_id = self._get_next_node_id()
-                            self._make_node(in_node_id,in_value, file_role)
+                            self._make_node(in_node_id,in_value, file_role, lang,  dialog_nodes, ref_ids)
                             in_keys_list = [k.strip() for k in in_keys.split(';')]
                             for in_key in in_keys_list:
                                 node["triggers"][in_key] = in_node_id
@@ -94,37 +88,36 @@ class YAMLLoader(IDialogLoader):
                         for cmd_trigger in value:
                             [(in_keys, in_value)] = cmd_trigger.items()
                             in_node_id = self._get_next_node_id()
-                            self._make_node(in_node_id,in_value, file_role)
+                            self._make_node(in_node_id,in_value, file_role, lang, dialog_nodes, ref_ids)
                             in_keys_list = [k.strip() for k in in_keys.split(';')]
                             for in_key in in_keys_list:
                                 node["cmd_triggers"][in_key] = in_node_id
                     case "cmd_id":
-                        if value in handler_registry:
-                            node["cmd_handler"] = handler_registry[value]
+                        handler = self._handlers.get(HandlerTypes.CMD, {}).get(lang, {}).get(value)
+                        if handler:
+                            node["cmd_handler"] = handler
                         else:
-                            logger.warning(LogZone.YAML,f"cmd_handler was missed for {node_id} node")
+                            logger.warning(LogZone.YAML, f"cmd_handler '{value}' was missed for {node_id} node in {lang}")
                     case "answer_id":
-                        if value in handler_registry:
-                            node["answer_handler"] = handler_registry[value]
+                        handler = self._handlers.get(HandlerTypes.ANSWER, {}).get(lang, {}).get(value)
+                        if handler:
+                            node["answer_handler"] = handler
                         else:
-                            logger.warning(LogZone.YAML,f"answer_handler was missed for {node_id} node")
+                            logger.warning(LogZone.YAML, f"answer_handler '{value}' was missed for {node_id} node in {lang}")
                     case "message_preprocess_id":
-                        if value in handler_registry:
-                            node["message_preprocess_handler"] = handler_registry[value]
+                        handler = self._handlers.get(HandlerTypes.MESSAGE_PREPROCESS, {}).get(lang, {}).get(value)
+                        if handler:
+                            node["message_preprocess_handler"] = handler
                         else:
-                            logger.warning(LogZone.YAML,f"message_preprocess_handler was missed for {node_id} node")
+                            logger.warning(LogZone.YAML, f"message_preprocess_handler '{value}' was missed for {node_id} node in {lang}")
                     case "freeInput_id":
-                        if value in handler_registry:
-                            node["freeInput_handler"] = handler_registry[value]
+                        handler = self._handlers.get(HandlerTypes.FREE_INPUT, {}).get(lang, {}).get(value)
+                        if handler:
+                            node["freeInput_handler"] = handler
                         else:
-                            logger.warning(LogZone.YAML,f"freeInput_handler was missed for {node_id} node")
+                            logger.warning(LogZone.YAML, f"freeInput_handler '{value}' was missed for {node_id} node in {lang}")
                     case "ref_id":
-                        self._ref_id_dict[value] = node_id
+                        ref_ids[value] = node_id
                     case default:
                         node[key] = value
-            self._dialog_nodes[node_id] = node
-
-@dataclass
-class Dialog_Node:
-    id : int
-    fields: dict[str, Any] = field(default_factory=dict)
+            dialog_nodes[node_id] = node

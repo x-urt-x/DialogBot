@@ -10,7 +10,7 @@ class User:
         self._dirty: set[str] = set()
 
     def __getitem__(self, key: str) -> Any:
-        return self._data[key]
+        return self._data.get(key)
 
     def __setitem__(self, key: str, value: Any):
         self._data[key] = value
