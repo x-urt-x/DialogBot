@@ -1,4 +1,4 @@
-from apiRegistry import ApiRegistry
+from boundary.infra.apiRegistry import ApiRegistry
 
 class ApiManager:
     def __init__(self, registry: ApiRegistry):

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from answer import Answer
+from models.answer import Answer
 
 class IApiLifecycle(ABC):
     @abstractmethod

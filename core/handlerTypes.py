@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import Callable, Awaitable, Any
 from inspect import signature
-from user_manager import UserManager
-from user import User
-from message import MessageView
+from core.userManager import UserManager
+from models.user import User
+from models.message import MessageView
 
 class HandlerTypes(Enum):
     CMD = "cmd"                    # async def(user: User, user_manager: UserManager, cmd_triggers: dict[str, int]) -> int | None

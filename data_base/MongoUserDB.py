@@ -1,9 +1,9 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from roles import Roles
+from enums.roles import Roles
 from IUserDB import IDataBase
 from pymongo.errors import PyMongoError
 from zonelogger import logger, LogZone
-from user import User
+from models.user import User
 
 class MongoUserDB(IDataBase):
     def __init__(self, connection_string, db_name):

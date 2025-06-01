@@ -1,12 +1,12 @@
-from message import Message, MessageView
-from roles import Roles
-from user import User
+from models.message import Message, MessageView
+from enums.roles import Roles
+from models.user import User
 from zonelogger import logger, LogZone
-from answer import Answer
-from user_manager import UserManager
-from nodesDict import NodesRootIDs
-from languages import Language
-from messageAnswerQueue import MessageAnswerQueue
+from models.answer import Answer
+from userManager import UserManager
+from models.nodesDict import NodesRootIDs
+from enums.languages import Language
+from models.messageAnswerQueue import MessageAnswerQueue
 from bUserParser import BUserParser
 
 class MessageManager:

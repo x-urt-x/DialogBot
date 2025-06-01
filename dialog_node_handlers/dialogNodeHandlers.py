@@ -1,14 +1,14 @@
 from encodings.uu_codec import uu_encode
 
-from dialog_node_handlers_manager import DialogNodeHandlersManager as dh
-from handlerTypes import HandlerTypes
-from roles import Roles
+from core.dialogNodeHandlersManager import DialogNodeHandlersManager as dh
+from core.handlerTypes import HandlerTypes
+from enums.roles import Roles
 from zonelogger import LogZone, logger
-from languages import Language
-from user import User
-from user_manager import UserManager
-from message import MessageView, Message
-from api_ids import ApiId
+from enums.languages import Language
+from models.user import User
+from core.userManager import UserManager
+from models.message import MessageView
+from enums.apiIDs import ApiId
 
 @dh.reg(HandlerTypes.CMD, Language.EN, "hi")
 async def hi_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):

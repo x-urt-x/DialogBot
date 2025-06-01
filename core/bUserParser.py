@@ -1,9 +1,9 @@
-from api_ids import ApiId
-from user_manager import UserManager
-from user import User
-from bUser import BUser
+from enums.apiIDs import ApiId
+from core.userManager import UserManager
+from models.user import User
+from models.bUser import BUser
 from zonelogger import logger, LogZone
-from roles import Roles
+from enums.roles import Roles
 
 class BUserParser:
     def __init__(self, user_manager: UserManager):

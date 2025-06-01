@@ -1,14 +1,11 @@
 import asyncio
-from answer import Answer
-from message import Message
-from api_ids import ApiId
-from user import User
-from user_manager import UserManager
+from models.answer import Answer
+from models.message import Message
+from enums.apiIDs import ApiId
 from zonelogger import logger, LogZone
-from IApi import IApiSender, IApiLifecycle
-from messageAnswerQueue import MessageAnswerQueue
-from roles import Roles
-from bUser import BUser
+from boundary.infra.IApi import IApiSender, IApiLifecycle
+from models.messageAnswerQueue import MessageAnswerQueue
+from models.bUser import BUser
 
 class ConsoleApi(IApiSender, IApiLifecycle):
     def __init__(self, message_answer_queue: MessageAnswerQueue):

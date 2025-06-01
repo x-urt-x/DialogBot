@@ -1,6 +1,6 @@
-from api_ids import ApiId
+from enums.apiIDs import ApiId
 from typing import Any
-from roles import Roles
+from enums.roles import Roles
 
 class User:
     def __init__(self, user_id: str, role: Roles = Roles.USER):

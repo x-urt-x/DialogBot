@@ -1,13 +1,12 @@
-from typing import Callable, Type, Awaitable
+from typing import Callable, Awaitable
 from zonelogger import logger, LogZone
 import yaml
 import os
-from dataclasses import dataclass, field
 from typing import Any
-from roles import Roles
-from languages import Language
-from handlerTypes import HandlerTypes
-from nodesDict import NodesRootIDs
+from enums.roles import Roles
+from enums.languages import Language
+from core.handlerTypes import HandlerTypes
+from models.nodesDict import NodesRootIDs
 
 class YAMLLoader():
     def __init__(self, handlers: dict[HandlerTypes, dict[Language, dict[str, Callable[..., Awaitable[Any]]]]]):

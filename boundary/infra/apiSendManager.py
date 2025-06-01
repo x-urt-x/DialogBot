@@ -1,13 +1,11 @@
-from typing import Optional
 from asyncio import Queue
 from apiRegistry import ApiRegistry
-from messageAnswerQueue import MessageAnswerQueue
-from user_manager import UserManager
-from answer import Answer
-from user import User
+from models.messageAnswerQueue import MessageAnswerQueue
+from core.userManager import UserManager
+from models.answer import Answer
 from IApi import IApiSender
 from zonelogger import logger, LogZone
-from api_ids import ApiId
+from enums.apiIDs import ApiId
 
 class ApiSendManager:
     def __init__(self, queue: MessageAnswerQueue, registry: ApiRegistry, user_manager: UserManager):

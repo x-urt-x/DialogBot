@@ -1,12 +1,12 @@
 from aiohttp import web
 import httpx
-from answer import Answer
-from message import Message
-from api_ids import ApiId
-from bUser import BUser
+from models.answer import Answer
+from models.message import Message
+from enums.apiIDs import ApiId
+from models.bUser import BUser
 from zonelogger import logger, LogZone
-from IApi import IApiSender, IApiLifecycle
-from messageAnswerQueue import MessageAnswerQueue
+from boundary.infra.IApi import IApiSender, IApiLifecycle
+from models.messageAnswerQueue import MessageAnswerQueue
 
 class TelegramApiManager(IApiSender, IApiLifecycle):
     async def send(self, answer: Answer):

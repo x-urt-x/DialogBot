@@ -1,7 +1,7 @@
 import asyncio
 from typing import Tuple
 from bUser import BUser
-from message import Message
+from models.message import Message
 from answer import Answer
 
 class MessageAnswerQueue:

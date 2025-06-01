@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from roles import Roles
-from user import User
+from enums.roles import Roles
+from models.user import User
 
 class IDataBase(ABC):
     @abstractmethod

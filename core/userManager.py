@@ -1,6 +1,6 @@
-from roles import Roles
-from IUserDB import IDataBase
-from user import User
+from enums.roles import Roles
+from data_base.IUserDB import IDataBase
+from models.user import User
 from zonelogger import logger, LogZone
 
 class UserManager:
