@@ -55,7 +55,7 @@ class TelegramApiManager(IApiSender, IApiLifecycle):
 
         logger.debug(LogZone.TG_API, f"from user {user_id}: {text}")
 
-        user: User = await self._user_manager.getUser(f"{ApiId.TG.value}:{user_id}")
+        user: User = await self._user_manager.getUserOrCreate(f"{ApiId.TG.value}:{user_id}")
         if text == "/start":
             user["dialog_stack"] = []
             text = ""

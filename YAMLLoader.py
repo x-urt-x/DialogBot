@@ -98,6 +98,12 @@ class YAMLLoader():
                             node["cmd_handler"] = handler
                         else:
                             logger.warning(LogZone.YAML, f"cmd_handler '{value}' was missed for {node_id} node in {lang}")
+                    case "cmd_exit_id":
+                        handler = self._handlers.get(HandlerTypes.CMD_EXIT, {}).get(lang, {}).get(value)
+                        if handler:
+                            node["cmd_exit_handler"] = handler
+                        else:
+                            logger.warning(LogZone.YAML, f"cmd_handler '{value}' was missed for {node_id} node in {lang}")
                     case "answer_id":
                         handler = self._handlers.get(HandlerTypes.ANSWER, {}).get(lang, {}).get(value)
                         if handler:

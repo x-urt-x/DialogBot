@@ -7,6 +7,7 @@ from user_manager import UserManager
 from zonelogger import logger, LogZone
 from IApi import IApiSender, IApiLifecycle
 from messageAnswerQueue import MessageAnswerQueue
+from roles import Roles
 
 
 class ConsoleApi(IApiSender, IApiLifecycle):
@@ -27,7 +28,8 @@ class ConsoleApi(IApiSender, IApiLifecycle):
                     print("Console API stopping...")
                     await self.stop()
                     return
-                user: User = await self._user_manager.getUser(f"{ApiId.CONSOLE.value}:local_user")
+                user: User = await self._user_manager.getUserOrCreate(f"{ApiId.CONSOLE.value}:local_user")
+                user["roles"] = user["roles"] | Roles.ADMIN
                 if user_input.strip() == "/start":
                     user["dialog_stack"] = []
                     user_input = ""

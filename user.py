@@ -6,7 +6,7 @@ class User:
     def __init__(self, user_id: str, role: Roles = Roles.USER):
         self._id = user_id
         self._data = {"role": Roles.USER, "roles": Roles.USER | Roles.GLOBAL, "dialog_stack": []}
-        self._tmp_fields: dict[ApiId, Any] = {}
+        self._api_fields: dict[ApiId, Any] = {}
         self._dirty: set[str] = set()
 
     def __getitem__(self, key: str) -> Any:
@@ -20,8 +20,8 @@ class User:
         self._dirty.add(key)
 
     @property
-    def tmp(self) -> dict[ApiId, Any]:
-        return self._tmp_fields
+    def api(self) -> dict[ApiId, Any]:
+        return self._api_fields
 
     def get_dirty_fields(self) -> dict:
         return {k: self._data[k] for k in self._dirty}

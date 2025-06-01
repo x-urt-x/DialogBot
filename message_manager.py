@@ -45,9 +45,9 @@ class MessageManager:
         #check input
         #start handlers
         #get next node
-        next_node_id = await MessageManager._processInputHandlers(user, message, current_node, dialog_nodes_roots)
+        next_node_id = await self._processInputHandlers(user, message, current_node, dialog_nodes_roots)
         #move on dialogs
-        if next_node_id != 0:
+        if next_node_id:
             await self._openNode(user, next_node_id, answer, dialog_nodes_roots)
         else:
             user["dialog_stack"].pop()
@@ -57,8 +57,7 @@ class MessageManager:
         #move on dialogs if needed
         return answer
 
-    @staticmethod
-    async def _processInputHandlers(user: User, message: Message, current_node, dialog_nodes_roots: NodesRootIDs):
+    async def _processInputHandlers(self, user: User, message: Message, current_node, dialog_nodes_roots: NodesRootIDs) -> int | None:
         message_preprocess_handler = current_node.get("message_preprocess_handler")
         if message_preprocess_handler:
             await message_preprocess_handler(user.to_dict(), MessageView(message, can_edit_text=True))
@@ -78,10 +77,16 @@ class MessageManager:
         cmd_triggers = current_node.get("cmd_triggers")
         freeInput_handler = current_node.get("freeInput_handler")
         if freeInput_handler:
-            freeInput_res = await freeInput_handler(user.to_dict(), MessageView(message), cmd_triggers)
-            if freeInput_res != 0:
-                return freeInput_res
-        return 0
+            user_new_data = await freeInput_handler(user, MessageView(message))
+            if user_new_data:
+                for key, value in user_new_data.items():
+                    user[key] = value
+        cmd_exit_handler = current_node.get("cmd_exit_handler")
+        if cmd_exit_handler:
+            ref_id = await cmd_exit_handler(user, self._userManager, current_node.get("cmd_triggers"))
+            if ref_id:
+                return ref_id
+        return None
 
     async def _openNode(self, user: User, new_node_id, answer: Answer, dialog_nodes_roots: NodesRootIDs):
         nodes: dict[int, dict] = dialog_nodes_roots["nodes"]
@@ -108,7 +113,7 @@ class MessageManager:
         cmd_handler = new_node.get("cmd_handler")
         ref_id = None
         if cmd_handler:
-            ref_id = await cmd_handler(user, self._userManager ,new_node.get("cmd_triggers"))
+            ref_id = await cmd_handler(user, self._userManager, new_node.get("cmd_triggers"))
         answer_handler = new_node.get("answer_handler")
         if answer_handler:
             new_node["text"] = await answer_handler(user.to_dict(), new_node.get("text", ""))
