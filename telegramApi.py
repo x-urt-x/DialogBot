@@ -3,8 +3,7 @@ import httpx
 from answer import Answer
 from message import Message
 from api_ids import ApiId
-from user import User
-from user_manager import UserManager
+from bUser import BUser
 from zonelogger import logger, LogZone
 from IApi import IApiSender, IApiLifecycle
 from messageAnswerQueue import MessageAnswerQueue
@@ -29,14 +28,13 @@ class TelegramApiManager(IApiSender, IApiLifecycle):
         async with httpx.AsyncClient() as client:
             await client.post(f"{self._api_url}/sendMessage", json=payload)
 
-    def __init__(self, token: str, public_url: str, user_manager: UserManager, messageAnswerQueue: MessageAnswerQueue ,webhook_path: str = "/webhook", port: int = 8000):
+    def __init__(self, messageAnswerQueue: MessageAnswerQueue, token: str, public_url: str, webhook_path: str = "/webhook", port: int = 8000):
         self._port = port
         self._token = token
         self._api_url = f"https://api.telegram.org/bot{token}"
         self._webhook_url = public_url.rstrip("/") + webhook_path
         self._webhook_path = webhook_path
         self._queue = messageAnswerQueue.incoming
-        self._user_manager = user_manager
 
         self._app = web.Application()
         self._app.router.add_post(self._webhook_path, self._handle_webhook)
@@ -54,11 +52,7 @@ class TelegramApiManager(IApiSender, IApiLifecycle):
         user_id = user_info.get("id")
 
         logger.debug(LogZone.TG_API, f"from user {user_id}: {text}")
-
-        user: User = await self._user_manager.getUserOrCreate(f"{ApiId.TG.value}:{user_id}")
-        if text == "/start":
-            user["dialog_stack"] = []
-            text = ""
+        user = BUser(ApiId.TG, user_id, user_info)
         message = Message(text, ApiId.TG, None)
         if chat_id:
             await self._queue.put((user,message))

@@ -1,7 +1,7 @@
 triggers:
   - back:
       ref: -2
-  - main:
+  - main; /start:
       ref: 0
   - hi:
       cmd_id: "hi"

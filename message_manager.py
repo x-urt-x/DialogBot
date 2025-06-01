@@ -7,17 +7,20 @@ from user_manager import UserManager
 from nodesDict import NodesRootIDs
 from languages import Language
 from messageAnswerQueue import MessageAnswerQueue
+from bUserParser import BUserParser
 
 class MessageManager:
-    def __init__(self, dialog_nodes_rootIDs_lang: dict[Language,NodesRootIDs], userManager: UserManager, messageAnswerQueue: MessageAnswerQueue):
+    def __init__(self, dialog_nodes_rootIDs_lang: dict[Language,NodesRootIDs], userManager: UserManager, messageAnswerQueue: MessageAnswerQueue, bUserParser: BUserParser ):
         self._dialog_nodes_rootIDs_lang = dialog_nodes_rootIDs_lang
         self._userManager = userManager
         self._messageAnswerQueue = messageAnswerQueue
+        self._bUserParser = bUserParser
 
     async def process_queue(self):
         if self._messageAnswerQueue.incoming.empty():
             return
-        user, message = await self._messageAnswerQueue.incoming.get()
+        bUser, message = await self._messageAnswerQueue.incoming.get()
+        user = await self._bUserParser.parse(bUser)
         answer =  await self.process(user, message)
         if answer:
             await self._messageAnswerQueue.outgoing.put(answer)

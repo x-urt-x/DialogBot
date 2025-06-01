@@ -1,5 +1,3 @@
-from operator import truediv
-
 from roles import Roles
 from IUserDB import IDataBase
 from user import User

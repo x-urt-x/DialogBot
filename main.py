@@ -16,6 +16,7 @@ from apiRegistry import ApiRegistry
 from api_ids import ApiId
 from apiManager import ApiManager
 from apiSendManager import ApiSendManager
+from bUserParser import BUserParser
 
 async def main():
     logger.enable_zone(LogZone.USERS)
@@ -38,11 +39,13 @@ async def main():
     userDB = MongoUserDB("localhost:27017", "dialog_bot")
     user_manager = UserManager(userDB)
 
-    messageAnswerQueue : MessageAnswerQueue = MessageAnswerQueue()
-    message_manager = MessageManager(dialogs, user_manager, messageAnswerQueue)
+    bUserParser = BUserParser(user_manager)
 
-    tg_api = TelegramApiManager(tg_token, "https://ca32-193-179-66-62.ngrok-free.app", user_manager, messageAnswerQueue, "/webhook", 8000)
-    console_api = ConsoleApi(user_manager, messageAnswerQueue)
+    messageAnswerQueue : MessageAnswerQueue = MessageAnswerQueue()
+    message_manager = MessageManager(dialogs, user_manager, messageAnswerQueue, bUserParser)
+
+    tg_api = TelegramApiManager(messageAnswerQueue, tg_token, "https://ca32-193-179-66-62.ngrok-free.app" , "/webhook", 8000)
+    console_api = ConsoleApi(messageAnswerQueue)
     apiRegistry = ApiRegistry()
     apiRegistry.register(ApiId.TG,tg_api)
     apiRegistry.register(ApiId.CONSOLE,console_api)

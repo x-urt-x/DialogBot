@@ -8,11 +8,10 @@ from zonelogger import logger, LogZone
 from IApi import IApiSender, IApiLifecycle
 from messageAnswerQueue import MessageAnswerQueue
 from roles import Roles
-
+from bUser import BUser
 
 class ConsoleApi(IApiSender, IApiLifecycle):
-    def __init__(self, user_manager: UserManager, message_answer_queue: MessageAnswerQueue):
-        self._user_manager = user_manager
+    def __init__(self, message_answer_queue: MessageAnswerQueue):
         self._in_queue = message_answer_queue.incoming
         self._out_queue = message_answer_queue.outgoing
         self._running = True
@@ -28,11 +27,7 @@ class ConsoleApi(IApiSender, IApiLifecycle):
                     print("Console API stopping...")
                     await self.stop()
                     return
-                user: User = await self._user_manager.getUserOrCreate(f"{ApiId.CONSOLE.value}:local_user")
-                user["roles"] = user["roles"] | Roles.ADMIN
-                if user_input.strip() == "/start":
-                    user["dialog_stack"] = []
-                    user_input = ""
+                user = BUser(ApiId.CONSOLE, "local_user", {})
                 message = Message(user_input, ApiId.CONSOLE, None)
                 await self._in_queue.put((user, message))
             except Exception as e:
