@@ -1,5 +1,5 @@
 from enums.apiIDs import ApiId
-from IApi import IApiSender, IApiLifecycle
+from boundary.infra.IApi import IApiSender, IApiLifecycle
 from zonelogger import logger, LogZone
 
 class ApiRegistry:

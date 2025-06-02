@@ -1,7 +1,7 @@
 from enums.apiIDs import ApiId
 
 class BUser:
-    def __init__(self, api: ApiId, user_id, data: dict):
+    def __init__(self, api: ApiId, ID, data: dict):
         self.api: ApiId = api
-        self.user_id = user_id
+        self.ID = ID
         self.data = data

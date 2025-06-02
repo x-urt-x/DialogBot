@@ -1,39 +1,133 @@
 from enums.apiIDs import ApiId
-from typing import Any
 from enums.roles import Roles
+from enums.languages import Language
+from collections import deque
 
 class User:
-    def __init__(self, user_id: str, role: Roles = Roles.USER):
-        self._id = user_id
-        self._data = {"role": Roles.USER, "roles": Roles.USER | Roles.GLOBAL, "dialog_stack": []}
-        self._api_fields: dict[ApiId, Any] = {}
-        self._dirty: set[str] = set()
+    def __init__(self, api: ApiId, ID: str):
+        self._api = {}
+        self._tmp = {}
+        self._data = {
+            "ID": ID,
+            "api": api,
+            "role": Roles.USER,
+            "roles": Roles.USER | Roles.GLOBAL,
+            "stack": deque(),
+            "lang": Language.EN
+        }
+        self._dirty: dict[str,set[str]] = {
+            "api": set(),
+            "data": set()
+        }
 
-    def __getitem__(self, key: str) -> Any:
-        return self._data.get(key)
 
-    def __setitem__(self, key: str, value: Any):
-        self._data[key] = value
-        self._dirty.add(key)
-
-    def setDirty(self, key: str):
-        self._dirty.add(key)
-
-    @property
-    def api(self) -> dict[ApiId, Any]:
-        return self._api_fields
-
-    def get_dirty_fields(self) -> dict:
-        return {k: self._data[k] for k in self._dirty}
+    def _setDirty(self, section, key: str):
+        self._dirty[section].add(key)
 
     def clear_dirty(self):
-        self._dirty.clear()
+        for v in self._dirty.values():
+            v.clear()
+
+    @property
+    def role(self)->Roles:
+        return self._data["role"]
+    @role.setter
+    def role(self, role: Roles):
+        if self._data["roles"] & role:
+            self._data["role"] = role
+            self._setDirty("data","role")
+
+    @property
+    def roles(self) -> Roles:
+        return self._data["roles"]
+
+    @property
+    def lang(self)->Language:
+        return self._data["lang"]
+    @lang.setter
+    def lang(self, lang:Language):
+        self._data["lang"] = lang
+        self._setDirty("data", "lang")
+
+    @property
+    def api(self):
+        return self._data["api"]
+
+    @property
+    def ID(self):
+        return self._data["ID"]
+
+    def stackPeek(self):
+        return self._data["stack"][-1]
+
+    def stackPopN(self, n: int) -> int | None:
+        stack = self._data["stack"]
+        if n == 0:
+            return None
+        if n > len(stack):
+            n = len(stack)
+        res = None
+        for _ in range(n):
+            res = stack.pop()
+        self._setDirty("data", "stack")
+        return res
+
+    def stackSetToOne(self, n:int):
+        stack = self._data["stack"]
+        stack.clear()
+        stack.append(n)
+        self._setDirty("data", "stack")
+
+    def stackAppend(self, n:int):
+        self._data["stack"].append(n)
+        self._setDirty("data", "stack")
+
+    def stackLen(self):
+        return len(self._data["stack"])
+
+    def stackClear(self):
+        self._data["stack"].clear()
+
+    def stackToRoot(self, roots) ->int | None:
+        stack = self._data["stack"]
+        stack.clear()
+        root_id = roots.get(self._data["role"])
+        if not root_id:
+            return None
+        stack.append(root_id)
+        self._setDirty("data", "stack")
+        return root_id
+
+    @property
+    def tmp(self):
+        return self._tmp
+
+    def apiDataGet(self, key: str):
+        return self._api.get(key)
+
+    def apiDataSet(self, key: str, val):
+        if self._api.get(key) == val:
+            return
+        self._api[key] = val
+        self._setDirty("data", key)
+
+    def get_dirty_fields(self) -> dict:
+        result = {"data":{},"api":{}}
+        for key in self._dirty["data"]:
+            if key in self._data:
+                result["data"][key] = self._data[key]
+        for key in self._dirty["api"]:
+            if key in self._api:
+                result["api"][key] = self._api[key]
+        return result
 
     def to_dict(self) -> dict:
-        return self._data
+        return {"data":self._data,"api":self._api}
 
-    def from_dict(self, data: dict):
-        self._data = data
-
-    def getId(self) :
-        return self._id
+    def from_dict(self, raw_data: dict):
+        api = raw_data.get("api")
+        if api is not None:
+            self._api = api
+        data = raw_data.get("data")
+        if data is not None:
+            self._data = data

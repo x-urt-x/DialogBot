@@ -1,13 +1,13 @@
 from models.message import Message, MessageView
-from enums.roles import Roles
 from models.user import User
-from zonelogger import logger, LogZone
 from models.answer import Answer
-from userManager import UserManager
 from models.nodesDict import NodesRootIDs
-from enums.languages import Language
 from models.messageAnswerQueue import MessageAnswerQueue
-from bUserParser import BUserParser
+from enums.roles import Roles
+from enums.languages import Language
+from core.userManager import UserManager
+from core.bUserParser import BUserParser
+from zonelogger import logger, LogZone
 
 class MessageManager:
     def __init__(self, dialog_nodes_rootIDs_lang: dict[Language,NodesRootIDs], userManager: UserManager, messageAnswerQueue: MessageAnswerQueue, bUserParser: BUserParser ):
@@ -21,14 +21,17 @@ class MessageManager:
             return
         bUser, message = await self._messageAnswerQueue.incoming.get()
         user = await self._bUserParser.parse(bUser)
+        if not user:
+            return
         answer =  await self.process(user, message)
         if answer:
             await self._messageAnswerQueue.outgoing.put(answer)
 
     async def process(self, user: User, message: Message)->Answer | None:
         answer = Answer()
-        answer.to_user_id = user.getId()
-        user_lang : Language = user["lang"]
+        answer.to_ID = user.ID
+        answer.to_api = user.api
+        user_lang : Language = user.lang
         if not user_lang:
             user_lang = Language.EN
         dialog_nodes_roots : NodesRootIDs | None= self._dialog_nodes_rootIDs_lang.get(user_lang)
@@ -36,28 +39,22 @@ class MessageManager:
             logger.error(LogZone.MESSAGE_PROCESS, f"no {user_lang} lang")
             return None
         nodes: dict[int, dict] = dialog_nodes_roots["nodes"]
-        #get node
-        if not user["dialog_stack"]:
-            await self._dialogStackToRoot(user, dialog_nodes_roots["roots"])
-        current_node_id = user["dialog_stack"][-1]
-        #load node
+        if user.stackLen() == 0:
+            res = user.stackToRoot(dialog_nodes_roots["roots"])
+            if not res:
+                logger.warning(LogZone.MESSAGE_PROCESS, f"no root for {user.role}")
+        current_node_id = user.stackPeek()
         current_node = nodes.get(current_node_id)
         if not current_node:
             logger.error(LogZone.MESSAGE_PROCESS, f"no node on {current_node_id} id")
             return None
-        #check input
-        #start handlers
-        #get next node
         next_node_id = await self._processInputHandlers(user, message, current_node, dialog_nodes_roots)
-        #move on dialogs
         if next_node_id:
             await self._openNode(user, next_node_id, answer, dialog_nodes_roots)
         else:
-            user["dialog_stack"].pop()
+            user.stackPopN(1)
             await self._openNode(user,current_node_id, answer, dialog_nodes_roots)
-        #output text
-        #process ref check perm
-        #move on dialogs if needed
+        await self._userManager.save_users_dirty(user)
         return answer
 
     async def _processInputHandlers(self, user: User, message: Message, current_node, dialog_nodes_roots: NodesRootIDs) -> int | None:
@@ -83,10 +80,10 @@ class MessageManager:
             user_new_data = await freeInput_handler(user, MessageView(message))
             if user_new_data:
                 for key, value in user_new_data.items():
-                    user[key] = value
+                    user.tmp[key] = value
         cmd_exit_handler = current_node.get("cmd_exit_handler")
         if cmd_exit_handler:
-            ref_id = await cmd_exit_handler(user, self._userManager, current_node.get("cmd_triggers"))
+            ref_id = await cmd_exit_handler(user, self._userManager, cmd_triggers)
             if ref_id:
                 return ref_id
         return None
@@ -100,19 +97,20 @@ class MessageManager:
             return
         node_role = new_node.get("role")
         if node_role is not None:
-            user_role = user["role"]
+            user_role = user.role
             if node_role != user_role:
-                user_roles : Roles = user["roles"]
+                user_roles : Roles = user.roles
                 if user_roles & Roles(node_role):
                     if node_role != Roles.GLOBAL:
-                        await self._userManager.setRole(user.getId(),node_role)
-                        await self._dialogStackToRoot(user, rootIDs)
+                        user.role = node_role
+                        res = user.stackToRoot(rootIDs)
+                        if not res:
+                            logger.warning(LogZone.MESSAGE_PROCESS, f"no root for {user.role}")
                 else:
                     answer.text.append("u dont have permission")
-                    logger.info(LogZone.MESSAGE_PROCESS, f"user {user.getId()} tres get access to {new_node_id} node")
+                    logger.info(LogZone.MESSAGE_PROCESS, f"user {user.api}:{user.ID} tres get access to {new_node_id} node")
                     return
-        user["dialog_stack"].append(new_node_id)
-        user.setDirty("dialog_stack")
+        user.stackAppend(new_node_id)
         cmd_handler = new_node.get("cmd_handler")
         ref_id = None
         if cmd_handler:
@@ -136,20 +134,14 @@ class MessageManager:
                 await self._openNode(user, ref_id, answer, dialog_nodes_roots)
             else:
                 if ref_id == 0:
-                    await self._dialogStackToRoot(user, rootIDs)
+                    user.stackClear()
+                    back_to_node_id = rootIDs[user.role]
                 else:
-                    dialog_stack = user["dialog_stack"]
-                    if -ref_id < len(dialog_stack):
-                        del dialog_stack[ref_id:]
+                    if -ref_id < user.stackLen():
+                        back_to_node_id = user.stackPopN((-ref_id)+1)
                     else:
-                        await self._dialogStackToRoot(user, rootIDs)
-                back_to_node_id = user["dialog_stack"].pop()
+                        user.stackClear()
+                        back_to_node_id = rootIDs[user.role]
+                if not back_to_node_id:
+                    logger.warning(LogZone.MESSAGE_PROCESS, f"no root for {user.role} or bad ref {ref_id}")
                 await self._openNode(user, back_to_node_id, answer, dialog_nodes_roots)
-        await self._userManager.save_users_dirty(user)
-
-    async def _dialogStackToRoot(self, user: User, rootIDs : dict[Roles, int]):
-        role : Roles = user["role"]
-        root_node_id = rootIDs[role]
-        user["dialog_stack"] = [root_node_id]
-        user.setDirty("dialog_stack")
-        await self._userManager.save_users_dirty(user)

@@ -1,9 +1,9 @@
 from asyncio import Queue
-from apiRegistry import ApiRegistry
+from boundary.infra.apiRegistry import ApiRegistry
+from boundary.infra.IApi import IApiSender
 from models.messageAnswerQueue import MessageAnswerQueue
-from core.userManager import UserManager
 from models.answer import Answer
-from IApi import IApiSender
+from core.userManager import UserManager
 from zonelogger import logger, LogZone
 from enums.apiIDs import ApiId
 
@@ -18,8 +18,8 @@ class ApiSendManager:
             return
 
         answer: Answer = await self._queue.get()
-        api_id = ApiId(answer.to_user_id.split(":")[0])
-        if answer.to_user_id is None:
+        api_id = ApiId(answer.to_api)
+        if answer.to_ID is None:
             logger.warning(LogZone.API_PROCES, f"no user to send")
             return
 

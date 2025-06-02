@@ -12,28 +12,28 @@ from enums.apiIDs import ApiId
 
 @dh.reg(HandlerTypes.CMD, Language.EN, "hi")
 async def hi_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
-    logger.info(LogZone.DIALOG_HANDLERS, f"hi from user {user.getId()}")
+    logger.info(LogZone.DIALOG_HANDLERS, f"hi from user {user.ID}")
 
 @dh.reg(HandlerTypes.CMD, Language.EN, "changeRoleToUser")
 async def changeRoleToUser_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
-    res = await user_manager.setRole(user.getId(), Roles.USER)
-    if res:
+    user.role = Roles.USER
+    if user.role == Roles.USER:
         return triggers.get("allowed")
     else:
         return triggers.get("forbidden")
 
 @dh.reg(HandlerTypes.CMD, Language.EN, "changeRoleToAdmin")
 async def changeRoleToUser_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
-    res = await user_manager.setRole(user.getId(), Roles.ADMIN)
-    if res:
+    user.role = Roles.ADMIN
+    if user.role == Roles.ADMIN:
         return triggers.get("allowed")
     else:
         return triggers.get("forbidden")
 
 @dh.reg(HandlerTypes.CMD, Language.EN, "changeRoleToSupport")
 async def changeRoleToUser_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
-    res = await user_manager.setRole(user.getId(), Roles.SUPPORT)
-    if res:
+    user.role = Roles.SUPPORT
+    if user.role == Roles.SUPPORT:
         return triggers.get("allowed")
     else:
         return triggers.get("forbidden")
@@ -44,31 +44,35 @@ async def setRolesUsers_input_handler(user: dict, msg: MessageView) -> dict | No
     try:
         parts = user_input.strip().split()
         api_str = parts[0].lower()
-        user_id_raw = parts[1]
-        return {"setRoleUserApi":api_str,"setRoleUserIdRaw": user_id_raw}
+        ID = parts[1]
+        return {"setRoleUserApi":api_str,"setRoleUserID": ID}
     except Exception:
         logger.info(LogZone.DIALOG_HANDLERS, f"invalid input string: {user_input!r}")
         return None
 
 @dh.reg(HandlerTypes.CMD_EXIT, Language.EN, "setRolesUser")
 async def setRolesUsers_cmdExit_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
-    setRoleUserApi = user["setRoleUserApi"]
-    setRoleUserIdRaw = user["setRoleUserIdRaw"]
-    logger.debug(LogZone.DIALOG_HANDLERS, f"setRoleUserApi: {setRoleUserApi} setRoleUserIdRaw: {setRoleUserIdRaw}")
-    if not setRoleUserApi or not setRoleUserIdRaw:
-        logger.info(LogZone.DIALOG_HANDLERS, f"Missing setRoleUserApi or setRoleUserId in user: {user.getId()}")
+    setRoleUserApi = user.tmp.get("setRoleUserApi")
+    setRoleUserID = user.tmp.get("setRoleUserID")
+    logger.debug(LogZone.DIALOG_HANDLERS, f"setRoleUserApi: {setRoleUserApi} setRoleUserID: {setRoleUserID}")
+    if not setRoleUserApi or not setRoleUserID:
+        logger.info(LogZone.DIALOG_HANDLERS, f"Missing setRoleUserApi or setRoleUserId in user: {user.ID}")
+        user.tmp.pop("setRoleUserApi", None)
+        user.tmp.pop("setRoleUserID", None)
         return triggers["bad"]
     try:
         api_id = ApiId(setRoleUserApi.lower())
     except ValueError:
         logger.info(LogZone.DIALOG_HANDLERS, f"Invalid API: {setRoleUserApi}")
         return triggers["bad"]
-    setRoleUserId = f"{api_id.value}:{setRoleUserIdRaw}"
-    setRoleUser = await user_manager.getUser(setRoleUserId)
+
+    setRoleUser = await user_manager.getUser(api_id, setRoleUserID)
+    user.tmp.pop("setRoleUserApi", None)
+    user.tmp.pop("setRoleUserID", None)
     if setRoleUser is None:
-        logger.info(LogZone.DIALOG_HANDLERS, f"User not found: {setRoleUserId}")
+        logger.info(LogZone.DIALOG_HANDLERS, f"User not found: {setRoleUserApi} {setRoleUserID}")
         return triggers["bad"]
-    user["setRoleUserId"] = setRoleUserId
+    user.tmp["setRoleUser"] = setRoleUser
     return triggers["good"]
 
 @dh.reg(HandlerTypes.FREE_INPUT, Language.EN, "setRolesRole")
@@ -91,10 +95,13 @@ async def setRolesRoles_input_handler(user: dict, msg: MessageView) -> dict | No
 
 @dh.reg(HandlerTypes.CMD_EXIT, Language.EN, "setRolesRole")
 async def setRolesRoles_cmdExit_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
-    setRoleUserId = user["setRoleUserId"]
-    setRoleUserRoles = user["setRoleUserRoles"]
-    if setRoleUserId and setRoleUserRoles:
-        await user_manager.setRoles(setRoleUserId, setRoleUserRoles)
-        return triggers["good"]
-    else:
+    setRoleUser = user.tmp.get("setRoleUser")
+    setRoleUserRoles = user.tmp.get("setRoleUserRoles")
+    if not setRoleUser or not setRoleUserRoles:
+        user.tmp.pop("setRoleUser", None)
+        user.tmp.pop("setRoleUserRoles", None)
         return triggers["bad"]
+    await user_manager.setRoles(setRoleUser.api, setRoleUser.ID, setRoleUserRoles)
+    user.tmp.pop("setRoleUser", None)
+    user.tmp.pop("setRoleUserRoles", None)
+    return triggers["good"]

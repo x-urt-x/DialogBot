@@ -1,8 +1,8 @@
 import asyncio
 from typing import Tuple
-from bUser import BUser
+from models.bUser import BUser
 from models.message import Message
-from answer import Answer
+from models.answer import Answer
 
 class MessageAnswerQueue:
     def __init__(self):

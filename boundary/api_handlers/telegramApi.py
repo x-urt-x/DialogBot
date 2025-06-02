@@ -10,9 +10,8 @@ from models.messageAnswerQueue import MessageAnswerQueue
 
 class TelegramApiManager(IApiSender, IApiLifecycle):
     async def send(self, answer: Answer):
-        chat_id = answer.to_user_id.split(":",1)[1]
         keyboard = []
-        payload = {"chat_id": chat_id}
+        payload = {"chat_id": answer.to_ID}
         if answer.text:
             payload["text"] = "\n\n".join(msg for msg in answer.text if msg)
         else:
@@ -49,10 +48,10 @@ class TelegramApiManager(IApiSender, IApiLifecycle):
         chat_id = tg_message.get("chat", {}).get("id")
         text = tg_message.get("text", "")
         user_info = tg_message.get("from", {})
-        user_id = user_info.get("id")
+        ID = user_info.get("id")
 
-        logger.debug(LogZone.TG_API, f"from user {user_id}: {text}")
-        user = BUser(ApiId.TG, user_id, user_info)
+        logger.debug(LogZone.TG_API, f"from user {ID}: {text}")
+        user = BUser(ApiId.TG, ID, user_info)
         message = Message(text, ApiId.TG, None)
         if chat_id:
             await self._queue.put((user,message))

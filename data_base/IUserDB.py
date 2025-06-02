@@ -1,20 +1,15 @@
 from abc import ABC, abstractmethod
-from enums.roles import Roles
-from models.user import User
+from enums.apiIDs import ApiId
 
 class IDataBase(ABC):
     @abstractmethod
-    async def getUser(self, user_id)->User:
+    async def getUserData(self, api: ApiId, ID)-> dict | None:
         pass
 
     @abstractmethod
-    async def setRole(self, user_id, role: Roles):
+    async def createUser(self, api: ApiId, ID, data : dict):
         pass
 
     @abstractmethod
-    async def createUser(self, user_id, data : dict):
-        pass
-
-    @abstractmethod
-    async def updateUserData(self, user_id, data:dict):
+    async def updateUserData(self, api: ApiId, ID, set_data: dict, unset_data: dict):
         pass

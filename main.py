@@ -1,21 +1,21 @@
-from zonelogger import logger, LogZone
-from core.dialogNodeHandlersManager import DialogNodeHandlersManager
-from YAMLLoader import YAMLLoader
-from core.userManager import UserManager
 from data_base.MongoUserDB import MongoUserDB
+from core.dialogNodeHandlersManager import DialogNodeHandlersManager
+from core.userManager import UserManager
 from core.messageManager import MessageManager
+from core.bUserParser import BUserParser
 from boundary.api_handlers.telegramApi import TelegramApiManager
 from boundary.api_handlers.consoleApi import ConsoleApi
-from tgToken import tg_token
-import asyncio
-from models.nodesDict import NodesRootIDs
-from enums.languages import Language
-from models.messageAnswerQueue import MessageAnswerQueue
 from boundary.infra.apiRegistry import ApiRegistry
-from enums.apiIDs import ApiId
 from boundary.infra.apiManager import ApiManager
 from boundary.infra.apiSendManager import ApiSendManager
-from core.bUserParser import BUserParser
+from models.nodesDict import NodesRootIDs
+from models.messageAnswerQueue import MessageAnswerQueue
+from zonelogger import logger, LogZone
+from YAMLLoader import YAMLLoader
+from tgToken import tg_token
+from enums.languages import Language
+from enums.apiIDs import ApiId
+import asyncio
 
 async def main():
     logger.enable_zone(LogZone.USERS)

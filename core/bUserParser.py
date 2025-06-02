@@ -11,13 +11,14 @@ class BUserParser:
 
     async def parse(self, bUser: BUser) -> User| None:
         bUserApi = bUser.api
-        bUserId = bUser.user_id
-        if not bUserId or bUserApi:
-            logger.warning(LogZone.API_PROCES, f"")
-        userId = f"{bUserApi.value}:{bUserId}"
-        user = await self._user_manager.getUserOrCreate(userId)
+        bUserId = bUser.ID
+        if not bUserId or not bUserApi:
+            logger.warning(LogZone.API_PROCES, f" miss api {bUserApi} or ID {bUserId} on parsing")
+            return None
+        user = await self._user_manager.getUserOrCreate(bUserApi, bUserId)
         for key, value in bUser.data.items():
-            user.api[key] = value
-        if bUserApi == ApiId.CONSOLE:
-            user["roles"] = user["roles"] | Roles.ADMIN
+            if key == "id": continue
+            user.apiDataSet(key, value)
+        if bUserApi == ApiId.CONSOLE and not (user.roles & Roles.ADMIN):
+            await self._user_manager.setRoles(bUserApi, bUserId, user.roles | Roles.ADMIN)
         return user
