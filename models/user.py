@@ -13,7 +13,6 @@ class User:
             "role": Roles.USER,
             "roles": Roles.USER | Roles.GLOBAL,
             "stack": deque(),
-            "lang": Language.EN
         }
         self._dirty: dict[str,set[str]] = {
             "api": set(),
@@ -42,8 +41,8 @@ class User:
         return self._data["roles"]
 
     @property
-    def lang(self)->Language:
-        return self._data["lang"]
+    def lang(self)->Language|None:
+        return self._data.get("lang")
     @lang.setter
     def lang(self, lang:Language):
         self._data["lang"] = lang

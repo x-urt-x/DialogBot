@@ -1,0 +1,21 @@
+text: "с возвращением, админ"
+triggers:
+  - установть роль:
+      freeInput_id: "setRolesUser"
+      cmd_exit_id: "setRolesUser"
+      text: "введите id пользователя"
+      cmd_triggers:
+        - good:
+            text: "select role"
+            freeInput_id: "setRolesRole"
+            cmd_exit_id: "setRolesRole"
+            cmd_triggers:
+              - good:
+                  text: "готово"
+                  ref: -3
+              - bad:
+                  text: "что то пошло не так"
+                  ref: -2
+        - bad:
+            text: "пользователь не найден"
+            ref: -1

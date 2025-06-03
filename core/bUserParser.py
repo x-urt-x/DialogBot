@@ -4,6 +4,7 @@ from models.user import User
 from models.bUser import BUser
 from zonelogger import logger, LogZone
 from enums.roles import Roles
+from enums.languages import Language
 
 class BUserParser:
     def __init__(self, user_manager: UserManager):
@@ -16,6 +17,11 @@ class BUserParser:
             logger.warning(LogZone.API_PROCES, f" miss api {bUserApi} or ID {bUserId} on parsing")
             return None
         user = await self._user_manager.getUserOrCreate(bUserApi, bUserId)
+        if user.lang is None:
+            if bUser.lang is None:
+                user.lang = Language.EN
+            else:
+                user.lang = bUser.lang
         for key, value in bUser.data.items():
             if key == "id": continue
             user.apiDataSet(key, value)

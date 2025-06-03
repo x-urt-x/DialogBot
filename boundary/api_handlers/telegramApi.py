@@ -7,6 +7,7 @@ from models.bUser import BUser
 from zonelogger import logger, LogZone
 from boundary.infra.IApi import IApiSender, IApiLifecycle
 from models.messageAnswerQueue import MessageAnswerQueue
+from enums.languages import Language
 
 class TelegramApiManager(IApiSender, IApiLifecycle):
     async def send(self, answer: Answer):
@@ -49,9 +50,18 @@ class TelegramApiManager(IApiSender, IApiLifecycle):
         text = tg_message.get("text", "")
         user_info = tg_message.get("from", {})
         ID = user_info.get("id")
+        lang_raw = user_info.get("language_code")
+        lang = None
+        if lang_raw:
+            try:
+                lang =  Language(lang_raw)
+                user_info.pop("language_code", None)
+            except ValueError:
+                lang = None
 
         logger.debug(LogZone.TG_API, f"from user {ID}: {text}")
-        user = BUser(ApiId.TG, ID, user_info)
+        user = BUser(ApiId.TG, ID, lang, user_info)
+
         message = Message(text, ApiId.TG, None)
         if chat_id:
             await self._queue.put((user,message))

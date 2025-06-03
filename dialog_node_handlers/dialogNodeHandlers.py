@@ -14,7 +14,7 @@ from enums.apiIDs import ApiId
 async def hi_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
     logger.info(LogZone.DIALOG_HANDLERS, f"hi from user {user.ID}")
 
-@dh.reg(HandlerTypes.CMD, Language.EN, "changeRoleToUser")
+@dh.reg(HandlerTypes.CMD, Language.ANY, "changeRoleToUser")
 async def changeRoleToUser_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
     user.role = Roles.USER
     if user.role == Roles.USER:
@@ -22,7 +22,7 @@ async def changeRoleToUser_handler(user: User, user_manager: UserManager, trigge
     else:
         return triggers.get("forbidden")
 
-@dh.reg(HandlerTypes.CMD, Language.EN, "changeRoleToAdmin")
+@dh.reg(HandlerTypes.CMD, Language.ANY, "changeRoleToAdmin")
 async def changeRoleToUser_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
     user.role = Roles.ADMIN
     if user.role == Roles.ADMIN:
@@ -30,7 +30,7 @@ async def changeRoleToUser_handler(user: User, user_manager: UserManager, trigge
     else:
         return triggers.get("forbidden")
 
-@dh.reg(HandlerTypes.CMD, Language.EN, "changeRoleToSupport")
+@dh.reg(HandlerTypes.CMD, Language.ANY, "changeRoleToSupport")
 async def changeRoleToUser_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
     user.role = Roles.SUPPORT
     if user.role == Roles.SUPPORT:
@@ -38,7 +38,7 @@ async def changeRoleToUser_handler(user: User, user_manager: UserManager, trigge
     else:
         return triggers.get("forbidden")
 
-@dh.reg(HandlerTypes.FREE_INPUT, Language.EN, "setRolesUser")
+@dh.reg(HandlerTypes.FREE_INPUT, Language.ANY, "setRolesUser")
 async def setRolesUsers_input_handler(user: dict, msg: MessageView) -> dict | None:
     user_input = msg.text
     try:
@@ -50,7 +50,7 @@ async def setRolesUsers_input_handler(user: dict, msg: MessageView) -> dict | No
         logger.info(LogZone.DIALOG_HANDLERS, f"invalid input string: {user_input!r}")
         return None
 
-@dh.reg(HandlerTypes.CMD_EXIT, Language.EN, "setRolesUser")
+@dh.reg(HandlerTypes.CMD_EXIT, Language.ANY, "setRolesUser")
 async def setRolesUsers_cmdExit_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
     setRoleUserApi = user.tmp.get("setRoleUserApi")
     setRoleUserID = user.tmp.get("setRoleUserID")
@@ -75,7 +75,7 @@ async def setRolesUsers_cmdExit_handler(user: User, user_manager: UserManager, t
     user.tmp["setRoleUser"] = setRoleUser
     return triggers["good"]
 
-@dh.reg(HandlerTypes.FREE_INPUT, Language.EN, "setRolesRole")
+@dh.reg(HandlerTypes.FREE_INPUT, Language.ANY, "setRolesRole")
 async def setRolesRoles_input_handler(user: dict, msg: MessageView) -> dict | None:
     bit_str = msg.text
     if not all(c in '01' for c in bit_str):
@@ -93,7 +93,7 @@ async def setRolesRoles_input_handler(user: dict, msg: MessageView) -> dict | No
             bitmask |= (1 << i)
     return {"setRoleUserRoles":bitmask}
 
-@dh.reg(HandlerTypes.CMD_EXIT, Language.EN, "setRolesRole")
+@dh.reg(HandlerTypes.CMD_EXIT, Language.ANY, "setRolesRole")
 async def setRolesRoles_cmdExit_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
     setRoleUser = user.tmp.get("setRoleUser")
     setRoleUserRoles = user.tmp.get("setRoleUserRoles")
@@ -105,3 +105,21 @@ async def setRolesRoles_cmdExit_handler(user: User, user_manager: UserManager, t
     user.tmp.pop("setRoleUser", None)
     user.tmp.pop("setRoleUserRoles", None)
     return triggers["good"]
+
+@dh.reg(HandlerTypes.CMD, Language.ANY, "toRu")
+async def toRu_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
+    user.lang = Language.RU
+    await user_manager.save_users_dirty(user)
+    return 0
+
+@dh.reg(HandlerTypes.CMD, Language.ANY, "toEn")
+async def toEn_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
+    user.lang = Language.EN
+    await user_manager.save_users_dirty(user)
+    return 0
+
+@dh.reg(HandlerTypes.CMD, Language.ANY, "toUa")
+async def toUa_handler(user: User, user_manager: UserManager, triggers: dict[str, int]):
+    user.lang = Language.EN #does not support yet
+    await user_manager.save_users_dirty(user)
+    return 0

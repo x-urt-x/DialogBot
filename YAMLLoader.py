@@ -53,7 +53,7 @@ class YAMLLoader():
             if "ref" in node:
                 ref = node["ref"]
                 if isinstance(ref, str):
-                    ref_node_id = ref_ids[ref]
+                    ref_node_id = ref_ids.get(ref)
                     if ref_node_id:
                         node["ref"] = ref_node_id
                     else:
@@ -92,37 +92,26 @@ class YAMLLoader():
                             for in_key in in_keys_list:
                                 node["cmd_triggers"][in_key] = in_node_id
                     case "cmd_id":
-                        handler = self._handlers.get(HandlerTypes.CMD, {}).get(lang, {}).get(value)
-                        if handler:
-                            node["cmd_handler"] = handler
-                        else:
-                            logger.warning(LogZone.YAML, f"cmd_handler '{value}' was missed for {node_id} node in {lang}")
+                        self._setHandlerToNode(HandlerTypes.CMD, lang, value, node)
                     case "cmd_exit_id":
-                        handler = self._handlers.get(HandlerTypes.CMD_EXIT, {}).get(lang, {}).get(value)
-                        if handler:
-                            node["cmd_exit_handler"] = handler
-                        else:
-                            logger.warning(LogZone.YAML, f"cmd_handler '{value}' was missed for {node_id} node in {lang}")
+                        self._setHandlerToNode(HandlerTypes.CMD_EXIT, lang, value, node)
                     case "answer_id":
-                        handler = self._handlers.get(HandlerTypes.ANSWER, {}).get(lang, {}).get(value)
-                        if handler:
-                            node["answer_handler"] = handler
-                        else:
-                            logger.warning(LogZone.YAML, f"answer_handler '{value}' was missed for {node_id} node in {lang}")
+                        self._setHandlerToNode(HandlerTypes.ANSWER, lang, value, node)
                     case "message_preprocess_id":
-                        handler = self._handlers.get(HandlerTypes.MESSAGE_PREPROCESS, {}).get(lang, {}).get(value)
-                        if handler:
-                            node["message_preprocess_handler"] = handler
-                        else:
-                            logger.warning(LogZone.YAML, f"message_preprocess_handler '{value}' was missed for {node_id} node in {lang}")
+                        self._setHandlerToNode(HandlerTypes.MESSAGE_PREPROCESS, lang, value, node)
                     case "freeInput_id":
-                        handler = self._handlers.get(HandlerTypes.FREE_INPUT, {}).get(lang, {}).get(value)
-                        if handler:
-                            node["freeInput_handler"] = handler
-                        else:
-                            logger.warning(LogZone.YAML, f"freeInput_handler '{value}' was missed for {node_id} node in {lang}")
+                        self._setHandlerToNode(HandlerTypes.FREE_INPUT, lang, value, node)
                     case "ref_id":
                         ref_ids[value] = node_id
-                    case default:
+                    case _:
                         node[key] = value
             dialog_nodes[node_id] = node
+
+    def _setHandlerToNode(self, handlerType:HandlerTypes, lang: Language, ID, node):
+        handler = self._handlers.get(handlerType, {}).get(lang, {}).get(ID)
+        if not handler:
+            handler = self._handlers.get(handlerType, {}).get(Language.ANY, {}).get(ID)
+        if handler:
+            node[handlerType.value] = handler
+        else:
+            logger.warning(LogZone.YAML, f"{handlerType.value} '{ID}' was missed for {node.get("id")} node in {lang}")

@@ -6,6 +6,7 @@ from zonelogger import logger, LogZone
 from boundary.infra.IApi import IApiSender, IApiLifecycle
 from models.messageAnswerQueue import MessageAnswerQueue
 from models.bUser import BUser
+from enums.languages import Language
 
 class ConsoleApi(IApiSender, IApiLifecycle):
     def __init__(self, message_answer_queue: MessageAnswerQueue):
@@ -24,7 +25,7 @@ class ConsoleApi(IApiSender, IApiLifecycle):
                     print("Console API stopping...")
                     await self.stop()
                     return
-                user = BUser(ApiId.CONSOLE, "local_user", {})
+                user = BUser(ApiId.CONSOLE, "local_user", Language.EN, {})
                 message = Message(user_input, ApiId.CONSOLE, None)
                 await self._in_queue.put((user, message))
             except Exception as e:

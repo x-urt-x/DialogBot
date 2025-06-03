@@ -1,0 +1,48 @@
+text: "добро пожаловать"
+triggers:
+    - тест:
+          text: "я тест"
+    - информация:
+        text: "я бот университета"
+    - добавить персональную информацию:
+        ref_id: "AddPInfo"
+        text: "какую информацию вы хотите добавить?"
+        triggers:
+            - имя:
+                freeInput_id: "enterName"
+                text: "введите имя"
+                cmd_triggers:
+                    - good:
+                        text: "имя принято"
+                        ref: -2
+                    - bad:
+                        text: "неподходящее имя"
+                        ref: -1
+            - фамилия:
+                freeInput_id: "enterSurName"
+                text: "введите фамилию"
+                cmd_triggers:
+                    - good:
+                        text: "фамилия принята"
+                        ref: -2
+                    - bad:
+                        text: "неподходящая фамилия"
+                        ref: -1
+            - отчество:
+                freeInput_id: "enterLastName"
+                text: "введите отчество"
+                cmd_triggers:
+                    - good:
+                        text: "отчество принято"
+                        ref: -2
+                    - bad:
+                        text: "неподходящее отчество"
+                        ref: -1
+    - поддержка:
+        text: "здесь вы можете получить помощь от человека. вы также можете добавить личную информацию для более точных ответов"
+        triggers:
+            - добавить информацию:
+                ref: "AddPInfo"
+            - написать сообщение:
+                cmd_id: "supportMessage"
+                text: "*рекомендации*"
