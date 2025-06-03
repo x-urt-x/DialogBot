@@ -52,11 +52,13 @@ class UserManager:
             logger.warning(LogZone.USERS, f"set no roles for {api}:{ID} user")
         user = await self.getUserOrCreate(api, ID)
         user._data["roles"] = roles
+        user._setDirty("data", "roles")
         role = user.role
         if roles != 0:
             if not (roles & role):
                 user.role = roles & -roles
         await self.save_users_dirty(user)
+        self._users.pop((api, ID))
 
     @staticmethod
     def serialize(raw: dict[str, Any]) -> dict[str, Any]:
