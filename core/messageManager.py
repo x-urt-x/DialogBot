@@ -59,19 +59,24 @@ class MessageManager:
         message_preprocess_handler = current_node.get("message_preprocess_handler")
         if message_preprocess_handler:
             await message_preprocess_handler(user.to_dict(), MessageView(message, can_edit_text=True))
-        triggers = current_node.get("triggers", {})
         nodes : dict[int,dict]= dialog_nodes_roots["nodes"]
         rootIDs : dict [Roles, int]= dialog_nodes_roots["roots"]
+
+        triggers = current_node.get("triggers", {})
         global_root_id = rootIDs.get(Roles.GLOBAL)
         global_root = nodes[global_root_id]
         global_triggers = global_root.get("triggers", {})
-        if global_triggers:
-            for key, value in global_triggers.items():
-                triggers.setdefault(key, value)
-        if triggers:
-            matched_trigger = triggers.get(message.text)
+        combined_triggers  = MessageManager._combineTriggers(triggers, global_triggers)
+        clean_combined_triggers = {
+            key: node_id
+            for key, (node_id, visibility) in combined_triggers.items()
+            if visibility != -1
+        }
+        if clean_combined_triggers:
+            matched_trigger = clean_combined_triggers.get(message.text)
             if matched_trigger:
                 return matched_trigger
+
         cmd_triggers = current_node.get("cmd_triggers")
         freeInput_handler = current_node.get(HandlerTypes.FREE_INPUT.value)
         if freeInput_handler:
@@ -123,11 +128,14 @@ class MessageManager:
         global_root_id = rootIDs.get(Roles.GLOBAL)
         global_root = nodes[global_root_id]
         global_triggers = global_root.get("triggers", {})
-        if global_triggers:
-            for key, value in global_triggers.items():
-                triggers.setdefault(key, value)
+        combined_triggers = MessageManager._combineTriggers(triggers, global_triggers)
+        clean_combined_triggers = {
+            key: node_id
+            for key, (node_id, visibility) in combined_triggers.items()
+            if visibility == 1
+        }
         answer.text.append(new_node.get("text", ""))  # текстов ответа может быть несколько
-        answer.hints = list(triggers.keys())  # дальнейшие подсказки только от последнего
+        answer.hints = list(clean_combined_triggers.keys())  # дальнейшие подсказки только от последнего
         if ref_id is None:
             ref_id = new_node.get("ref")
         if ref_id is not None:
@@ -146,3 +154,24 @@ class MessageManager:
                 if not back_to_node_id:
                     logger.warning(LogZone.MESSAGE_PROCESS, f"no root for {user.role} or bad ref {ref_id}")
                 await self._openNode(user, back_to_node_id, answer)
+
+    @staticmethod
+    def _combineTriggers(
+            local_triggers: dict[str, tuple[int | None, int]],
+            global_triggers: dict[str, tuple[int, int]]
+    ) -> dict[str, tuple[int, int]]:
+        merged = {}
+
+        # Start with global triggers
+        for key, (g_node_id, g_vis) in global_triggers.items():
+            merged[key] = (g_node_id, g_vis)
+
+        # Override or extend with local triggers
+        for key, (l_node_id, l_vis) in local_triggers.items():
+            if l_node_id is None:
+                g_node_id = global_triggers.get(key, (None,))[0]
+                merged[key] = (g_node_id, l_vis)
+            else:
+                merged[key] = (l_node_id, l_vis)
+
+        return merged

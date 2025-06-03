@@ -1,12 +1,17 @@
 triggers:
   - back:
       ref: -2
-  - main; /start:
+  - main; =/start:
       ref: 0
   - hi:
       cmd_id: "hi"
       text: "hi"
-      ref: -1
+      triggers:
+        - -change lang:
+        - -change role:
+        - -role:
+        - back:
+            ref: -1
   - change lang:
       text: "select lang"
       triggers:
@@ -19,7 +24,7 @@ triggers:
         - ua:
             cmd_id: "toUa"
             ref: -2
-  - change role; role:
+  - change role; =role:
       ref_id: "changeRole"
       text: "select role"
       triggers:

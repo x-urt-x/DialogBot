@@ -76,12 +76,30 @@ class YAMLLoader():
                     case "triggers":
                         node["triggers"] = {}
                         for trigger in value:
-                            [(in_keys, in_value)] = trigger.items()
-                            in_node_id = self._get_next_node_id()
-                            self._make_node(in_node_id,in_value, file_role, lang,  dialog_nodes, ref_ids)
+                            if trigger:
+                                [(in_keys, in_value)] = trigger.items()
+                            else:
+                                continue
+
+                            in_node_id = None
+                            if in_value is not None:
+                                in_node_id = self._get_next_node_id()
+                                self._make_node(in_node_id, in_value, file_role, lang, dialog_nodes, ref_ids)
+
                             in_keys_list = [k.strip() for k in in_keys.split(';')]
                             for in_key in in_keys_list:
-                                node["triggers"][in_key] = in_node_id
+                                if not in_key:
+                                    continue
+                                if in_key.startswith("-"):
+                                    visibility = -1
+                                    clean_key = in_key[1:]
+                                elif in_key.startswith("="):
+                                    visibility = 0
+                                    clean_key = in_key[1:]
+                                else:
+                                    visibility = 1
+                                    clean_key = in_key
+                                node["triggers"][clean_key] = (in_node_id, visibility)
                     case "cmd_triggers":
                         node["cmd_triggers"] = {}
                         for cmd_trigger in value:
