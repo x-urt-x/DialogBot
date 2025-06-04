@@ -46,3 +46,5 @@ triggers:
                   ref: -2
               - allowed:
                   ref: 0
+  - profile:
+      text: " Welcome back, {{ id }}!\nYour main role is: {{ role }}\nAdditional roles:\n{% for r in roles %}\n- {{ r }}\n{% endfor %}\nYou are using the API: {{ api }}\nSystem time: {{ system.now }}"

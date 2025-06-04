@@ -101,6 +101,10 @@ class User:
     def tmp(self):
         return self._tmp
 
+    @property
+    def api_data(self):
+        return self._api
+
     def apiDataGet(self, key: str):
         return self._api.get(key)
 

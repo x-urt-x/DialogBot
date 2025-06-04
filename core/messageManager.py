@@ -9,6 +9,7 @@ from core.userManager import UserManager
 from core.bUserParser import BUserParser
 from zonelogger import logger, LogZone
 from core.handlerTypes import HandlerTypes as Ht
+from core.templateProcessor import TemplateProcessor
 
 class MessageManager:
     def __init__(self, dialog_nodes_rootIDs_lang: dict[Language,NodesRootIDs], userManager: UserManager, messageAnswerQueue: MessageAnswerQueue, bUserParser: BUserParser ):
@@ -53,6 +54,7 @@ class MessageManager:
             user.stackPopN(1)
             await self._openNode(user,current_node_id, answer)
         await self._userManager.save_users_dirty(user)
+        answer.text = TemplateProcessor.render_all(answer.text, user, message)
         return answer
 
     async def _processInputHandlers(self, user: User, message: Message, current_node, dialog_nodes_roots: NodesRootIDs) -> int | None:
