@@ -8,13 +8,13 @@ triggers:
       triggers:
         - русский:
             open_user_id: "toRu"
-            ref: -2
+            ref: 0
         - английский:
             open_user_id: "toEn"
-            ref: -2
+            ref: 0
         - украинский:
             open_user_id: "toUa"
-            ref: -2
+            ref: 0
   - сменить роль; =роль:
       ref_id: "changeRole"
       text: "выберите роль"

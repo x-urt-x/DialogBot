@@ -8,13 +8,13 @@ triggers:
       triggers:
         - ru:
             open_user_id: "toRu"
-            ref: -2
+            ref: 0
         - en:
             open_user_id: "toEn"
-            ref: -2
+            ref: 0
         - ua:
             open_user_id: "toUa"
-            ref: -2
+            ref: 0
   - change role; =role:
       ref_id: "changeRole"
       text: "select role"
