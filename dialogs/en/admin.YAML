@@ -1,21 +1,27 @@
 text: "welcome back, Admin"
 triggers:
   - set role:
-      freeInput_id: "setRolesUser"
-      cmd_exit_id: "setRolesUser"
+      input_parse_id: "setRoleUser"
+      input_user_id: "setRoleUser"
+      input_switch_id: "setRoleUser"
       text: "enter user id"
-      cmd_triggers:
+      triggers:
+        - -change role; -role; =main; -change lang:
+      switch_triggers:
         - good:
             text: "select role"
-            freeInput_id: "setRolesRole"
-            cmd_exit_id: "setRolesRole"
-            cmd_triggers:
+            input_parse_id: "setRoleRole"
+            input_user_id: "setRoleRole"
+            input_switch_id: "setRoleRole"
+            triggers:
+              - -change role; -role; =main:
+            switch_triggers:
               - good:
                   text: "done"
                   ref: -3
               - bad:
                   text: "something has gone wrong"
-                  ref: -2
+                  ref: -3
         - bad:
             text: "no such user"
             ref: -1

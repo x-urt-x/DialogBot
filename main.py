@@ -43,7 +43,7 @@ async def main():
     messageAnswerQueue : MessageAnswerQueue = MessageAnswerQueue()
     message_manager = MessageManager(dialogs, user_manager, messageAnswerQueue, bUserParser)
 
-    tg_api = TelegramApiManager(messageAnswerQueue, tg_token, "https://ca32-193-179-66-62.ngrok-free.app" , "/webhook", 8000)
+    tg_api = TelegramApiManager(messageAnswerQueue, tg_token, "https://438f-193-179-66-167.ngrok-free.app" , "/webhook", 8000)
     console_api = ConsoleApi(messageAnswerQueue)
     apiRegistry = ApiRegistry()
     apiRegistry.register(ApiId.TG,tg_api)

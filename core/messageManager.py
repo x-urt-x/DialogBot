@@ -8,7 +8,7 @@ from enums.languages import Language
 from core.userManager import UserManager
 from core.bUserParser import BUserParser
 from zonelogger import logger, LogZone
-from core.handlerTypes import HandlerTypes
+from core.handlerTypes import HandlerTypes as Ht
 
 class MessageManager:
     def __init__(self, dialog_nodes_rootIDs_lang: dict[Language,NodesRootIDs], userManager: UserManager, messageAnswerQueue: MessageAnswerQueue, bUserParser: BUserParser ):
@@ -56,9 +56,6 @@ class MessageManager:
         return answer
 
     async def _processInputHandlers(self, user: User, message: Message, current_node, dialog_nodes_roots: NodesRootIDs) -> int | None:
-        message_preprocess_handler = current_node.get("message_preprocess_handler")
-        if message_preprocess_handler:
-            await message_preprocess_handler(user.to_dict(), MessageView(message, can_edit_text=True))
         nodes : dict[int,dict]= dialog_nodes_roots["nodes"]
         rootIDs : dict [Roles, int]= dialog_nodes_roots["roots"]
 
@@ -72,21 +69,35 @@ class MessageManager:
             for key, (node_id, visibility) in combined_triggers.items()
             if visibility != -1
         }
+        switch_triggers = current_node.get("switch_triggers")
+
+        #INPUT_MSG
+        input_msg_handler = current_node.get(Ht.INPUT_MSG)
+        if input_msg_handler:
+            res = await input_msg_handler(MessageView(message, can_edit_text=True))
+            MessageManager._deep_merge(user.tmp, res)
+
+        #triggers
         if clean_combined_triggers:
             matched_trigger = clean_combined_triggers.get(message.text)
             if matched_trigger:
                 return matched_trigger
 
-        cmd_triggers = current_node.get("cmd_triggers")
-        freeInput_handler = current_node.get(HandlerTypes.FREE_INPUT.value)
-        if freeInput_handler:
-            user_new_data = await freeInput_handler(user, MessageView(message))
-            if user_new_data:
-                for key, value in user_new_data.items():
-                    user.tmp[key] = value
-        cmd_exit_handler = current_node.get(HandlerTypes.CMD_EXIT.value)
-        if cmd_exit_handler:
-            ref_id = await cmd_exit_handler(user, self._userManager, cmd_triggers)
+        #INPUT_PARSE
+        input_parse_handler = current_node.get(Ht.INPUT_PARSE.value)
+        if input_parse_handler:
+            res = await input_parse_handler(MessageView(message))
+            MessageManager._deep_merge(user.tmp, res)
+
+        #INPUT_USER
+        input_user_handler = current_node.get(Ht.INPUT_USER.value)
+        if input_user_handler:
+            await input_user_handler(user, self._userManager)
+
+        #INPUT_SWITCH
+        input_switch_handler = current_node.get(Ht.INPUT_SWITCH.value)
+        if input_switch_handler:
+            ref_id = await input_switch_handler(user.tmp, switch_triggers)
             if ref_id:
                 return ref_id
         return None
@@ -95,8 +106,10 @@ class MessageManager:
         dialog_nodes_roots = self._dialog_nodes_rootIDs_lang.get(user.lang)
         nodes: dict[int, dict] = dialog_nodes_roots["nodes"]
         rootIDs : dict [Roles, int] = dialog_nodes_roots["roots"]
+
         if new_node_id == -1:
             new_node_id = rootIDs[user.role]
+
         new_node = nodes.get(new_node_id)
         if not new_node:
             logger.error(LogZone.MESSAGE_PROCESS, f"no node on {new_node_id} id")
@@ -117,13 +130,7 @@ class MessageManager:
                     logger.info(LogZone.MESSAGE_PROCESS, f"user {user.api}:{user.ID} tres get access to {new_node_id} node")
                     return
         user.stackAppend(new_node_id)
-        cmd_handler = new_node.get(HandlerTypes.CMD.value)
-        ref_id = None
-        if cmd_handler:
-            ref_id = await cmd_handler(user, self._userManager, new_node.get("cmd_triggers"))
-        answer_handler = new_node.get(HandlerTypes.ANSWER.value)
-        if answer_handler:
-            new_node["text"] = await answer_handler(user.to_dict(), new_node.get("text", ""))
+
         triggers = new_node.get("triggers", {})
         global_root_id = rootIDs.get(Roles.GLOBAL)
         global_root = nodes[global_root_id]
@@ -134,8 +141,30 @@ class MessageManager:
             for key, (node_id, visibility) in combined_triggers.items()
             if visibility == 1
         }
-        answer.text.append(new_node.get("text", ""))  # текстов ответа может быть несколько
-        answer.hints = list(clean_combined_triggers.keys())  # дальнейшие подсказки только от последнего
+        switch_triggers = new_node.get("switch_triggers")
+
+        #OPEN_USER
+        open_user_handler = new_node.get(Ht.OPEN_USER.value)
+        if open_user_handler:
+            await open_user_handler(user, self._userManager)
+
+        #OPEN_TEXT
+        text = new_node.get("text")
+        open_text_handler = new_node.get(Ht.OPEN_TEXT.value)
+        if open_text_handler:
+            text = await open_text_handler(text)
+        if text is None:
+            text = ""
+
+        #OPEN_SWITCH
+        ref_id = None
+        open_switch_handler = new_node.get(Ht.OPEN_SWITCH.value)
+        if open_switch_handler:
+            ref_id = await open_switch_handler(user.tmp, switch_triggers)
+
+        answer.text.append(text)
+        answer.hints = list(clean_combined_triggers.keys())
+
         if ref_id is None:
             ref_id = new_node.get("ref")
         if ref_id is not None:
@@ -175,3 +204,18 @@ class MessageManager:
                 merged[key] = (l_node_id, l_vis)
 
         return merged
+
+    @staticmethod
+    def _deep_merge(old: dict, new: dict| None) -> dict:
+        if new is None:
+            return old
+        for key, new_value in new.items():
+            if key in old:
+                old_value = old[key]
+                if isinstance(old_value, dict) and isinstance(new_value, dict):
+                    MessageManager._deep_merge(old_value, new_value)
+                else:
+                    old[key] = new_value
+            else:
+                old[key] = new_value
+        return old

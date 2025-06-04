@@ -1,45 +1,49 @@
 text: "добро пожаловать"
 triggers:
-    - тест:
-          text: "я тест"
-    - информация:
+    - информация; about:
         text: "я бот университета"
-    - добавить персональную информацию:
+    - добавить личную информацию:
         ref_id: "AddPInfo"
         text: "какую информацию вы хотите добавить?"
         triggers:
             - имя:
-                freeInput_id: "enterName"
-                text: "введите имя"
-                cmd_triggers:
+                input_parse_id: "enterName"
+                input_switch_id: "enterName"
+                text: "введите ваше имя"
+                switch_triggers:
                     - good:
                         text: "имя принято"
+                        open_user_id: "enterName"
                         ref: -2
                     - bad:
                         text: "неподходящее имя"
                         ref: -1
             - фамилия:
-                freeInput_id: "enterSurName"
-                text: "введите фамилию"
-                cmd_triggers:
+                input_parse_id: "enterSurName"
+                input_switch_id: "enterSurName"
+                text: "введите вашу фамилию"
+                switch_triggers:
                     - good:
                         text: "фамилия принята"
+                        open_user_id: "enterSurName"
                         ref: -2
                     - bad:
                         text: "неподходящая фамилия"
                         ref: -1
             - отчество:
-                freeInput_id: "enterLastName"
-                text: "введите отчество"
-                cmd_triggers:
+                input_parse_id: "enterLastName"
+                input_switch_id: "enterLastName"
+                text: "введите ваше отчество"
+                switch_triggers:
                     - good:
                         text: "отчество принято"
+                        open_user_id: "enterSurName"
                         ref: -2
                     - bad:
                         text: "неподходящее отчество"
                         ref: -1
     - поддержка:
-        text: "здесь вы можете получить помощь от человека. вы также можете добавить личную информацию для более точных ответов"
+        text: "здесь вы можете получить помощь от человека. вы можете добавить личную информацию для более точных ответов"
         triggers:
             - добавить информацию:
                 ref: "AddPInfo"

@@ -3,52 +3,46 @@ triggers:
       ref: -2
   - main; =/start:
       ref: 0
-  - hi:
-      cmd_id: "hi"
-      text: "hi"
-      triggers:
-        - -change lang:
-        - -change role:
-        - -role:
-        - back:
-            ref: -1
   - change lang:
       text: "select lang"
       triggers:
         - ru:
-            cmd_id: "toRu"
+            open_user_id: "toRu"
             ref: -2
         - en:
-            cmd_id: "toEn"
+            open_user_id: "toEn"
             ref: -2
         - ua:
-            cmd_id: "toUa"
+            open_user_id: "toUa"
             ref: -2
   - change role; =role:
       ref_id: "changeRole"
       text: "select role"
       triggers:
         - user:
-            cmd_id: "changeRoleToUser"
-            cmd_triggers:
+            open_user_id: "changeRoleToUser"
+            open_switch_id: "changeRoleRes"
+            switch_triggers:
               - forbidden:
                   text: "u dont have permission"
                   ref: -2
               - allowed:
                   ref: 0
         - admin:
-            cmd_id: "changeRoleToAdmin"
-            cmd_triggers:
+            open_user_id: "changeRoleToAdmin"
+            open_switch_id: "changeRoleRes"
+            switch_triggers:
               - forbidden:
-                  text: "u dont have permision"
+                  text: "u dont have permission"
                   ref: -2
               - allowed:
                   ref: 0
         - support:
-            cmd_id: "changeRoleToSupport"
-            cmd_triggers:
+            open_user_id: "changeRoleToSupport"
+            open_switch_id: "changeRoleRes"
+            switch_triggers:
               - forbidden:
-                  text: "u dont have permision"
+                  text: "u dont have permission"
                   ref: -2
               - allowed:
                   ref: 0

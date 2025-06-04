@@ -1,67 +1,47 @@
-from enum import Enum
-from typing import Callable, Awaitable, Any
 from inspect import signature
-from core.userManager import UserManager
-from models.user import User
-from models.message import MessageView
+from typing import Awaitable, Callable, Any
+from enum import Enum
+from typing import get_origin, get_args
 
 class HandlerTypes(Enum):
-    CMD = "cmd"                    # async def(user: User, user_manager: UserManager, cmd_triggers: dict[str, int]) -> int | None
-    ANSWER = "answer"              # async def(user: dict, msg: str) -> str
-    MESSAGE_PREPROCESS = "preprocess"  # async def(user: dict, msg: MessageView) -> None
-    FREE_INPUT = "free_input"      # async def(user: dict, msg: MessageView) -> (dict | None, int | None)
-    CMD_EXIT = "cmd_exit"          # async def(user: User, user_manager: UserManager, cmd_triggers: dict[str, int]) -> int | None
+    OPEN_SWITCH = "open_switch"
+    INPUT_SWITCH = "input_switch"
+    OPEN_TEXT = "open_text"
+    INPUT_MSG = "input_msg"
+    INPUT_PARSE = "input_parse"
+    INPUT_USER = "input_user"
+    OPEN_USER = "open_user"
 
 
-def validate_cmd(fn: Callable[..., Awaitable[Any]]):
+HandlerSignatures: dict[HandlerTypes, list[type]] = {
+    HandlerTypes.OPEN_SWITCH:  [dict, dict[str, int]],  # tmp, triggers
+    HandlerTypes.INPUT_SWITCH: [dict, dict[str, int]],  # tmp, triggers
+    HandlerTypes.OPEN_TEXT:    [dict, str],   # user_data, text
+    HandlerTypes.INPUT_MSG:    ['MessageView'],  # msg
+    HandlerTypes.INPUT_PARSE:  ['MessageView'],  # msg
+    HandlerTypes.INPUT_USER:   ['User', 'UserManager'], # user, user_manager
+    HandlerTypes.OPEN_USER:    ['User', 'UserManager'], # user, user_manager
+}
+
+
+def validate_handler(fn: Callable[..., Awaitable[Any]], handler_type: HandlerTypes):
+    expected_types = HandlerSignatures[handler_type]
     sig = signature(fn)
     params = list(sig.parameters.values())
-    if len(params) != 3:
-        raise TypeError("Cmd handler must take exactly three arguments: (user: User, user_manager: UserManager, cmd_triggers: dict[str, int])")
-    if params[0].annotation is not User:
-        raise TypeError("First argument of Cmd handler must be of type 'User'")
-    if params[1].annotation is not UserManager:
-        raise TypeError("Second argument of Cmd handler must be of type 'UserManager'")
-    if params[2].annotation != dict[str, int]:
-        raise TypeError("Third argument of Cmd handler must be of type 'dict[str, int]'")
 
+    if len(params) != len(expected_types):
+        raise TypeError(f"{handler_type.value} handler must take exactly {len(expected_types)} arguments")
 
-def validate_answer(fn: Callable[..., Awaitable[Any]]):
-    sig = signature(fn)
-    params = list(sig.parameters.values())
-    if len(params) != 2:
-        raise TypeError("Answer handler must take exactly two arguments: (user: dict, msg: str)")
-    if params[0].annotation != dict:
-        raise TypeError("First argument of Answer handler must be of type 'dict'")
-    if params[1].annotation is not str:
-        raise TypeError("Second argument of Answer handler must be of type 'str'")
-
-
-def validate_preprocess(fn: Callable[..., Awaitable[Any]]):
-    sig = signature(fn)
-    params = list(sig.parameters.values())
-    if len(params) != 2:
-        raise TypeError("MessagePreprocess handler must take exactly two arguments: (user: dict, msg: MessageView)")
-    if params[0].annotation != dict:
-        raise TypeError("First argument of MessagePreprocess handler must be of type 'dict'")
-    if params[1].annotation is not MessageView:
-        raise TypeError("Second argument of MessagePreprocess handler must be of type 'MessageView'")
-
-
-def validate_free_input(fn: Callable[..., Awaitable[Any]]):
-    sig = signature(fn)
-    params = list(sig.parameters.values())
-    if len(params) != 2:
-        raise TypeError("FreeInput handler must take exactly three arguments: (user: dict, msg: MessageView, cmd_triggers: dict[str, int])")
-    if params[0].annotation != dict:
-        raise TypeError("First argument of FreeInput handler must be of type 'User'")
-    if params[1].annotation is not MessageView:
-        raise TypeError("Second argument of FreeInput handler must be of type 'MessageView'")
+    for i, (param, expected_type) in enumerate(zip(params, expected_types)):
+        ann = param.annotation
+        if isinstance(expected_type, str):
+            expected_name = expected_type
+            if ann.__name__ != expected_name:
+                raise TypeError(f"Argument {i+1} of {handler_type.value} handler must be '{expected_name}', got '{ann.__name__}'")
+        elif not (get_origin(ann) == get_origin(expected_type) and get_args(ann) == get_args(expected_type)):
+            raise TypeError(f"Argument {i+1} of {handler_type.value} handler must be {expected_type}, got {ann}")
 
 HandlerValidators: dict[HandlerTypes, Callable[[Callable[..., Awaitable[Any]]], None]] = {
-    HandlerTypes.CMD: validate_cmd,
-    HandlerTypes.ANSWER: validate_answer,
-    HandlerTypes.MESSAGE_PREPROCESS: validate_preprocess,
-    HandlerTypes.FREE_INPUT: validate_free_input,
-    HandlerTypes.CMD_EXIT: validate_cmd
+    ht: (lambda ht=ht: lambda fn: validate_handler(fn, ht))()
+    for ht in HandlerTypes
 }

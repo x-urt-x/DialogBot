@@ -5,13 +5,15 @@ import os
 from typing import Any
 from enums.roles import Roles
 from enums.languages import Language
-from core.handlerTypes import HandlerTypes
+from core.handlerTypes import HandlerTypes as Ht
 from models.nodesDict import NodesRootIDs
 
-class YAMLLoader():
-    def __init__(self, handlers: dict[HandlerTypes, dict[Language, dict[str, Callable[..., Awaitable[Any]]]]]):
+HANDLER_TYPE_MAP = {f"{ht.value}_id": ht for ht in Ht}
+
+class YAMLLoader:
+    def __init__(self, handlers: dict[Ht, dict[Language, dict[str, Callable[..., Awaitable[Any]]]]]):
         self._handlers = handlers
-        self._id_counter = 1 #для разделения работы ref
+        self._id_counter = 1
 
     def _get_next_node_id(self):
         id = self._id_counter
@@ -100,36 +102,29 @@ class YAMLLoader():
                                     visibility = 1
                                     clean_key = in_key
                                 node["triggers"][clean_key] = (in_node_id, visibility)
-                    case "cmd_triggers":
-                        node["cmd_triggers"] = {}
+                    case "switch_triggers":
+                        node["switch_triggers"] = {}
                         for cmd_trigger in value:
                             [(in_keys, in_value)] = cmd_trigger.items()
                             in_node_id = self._get_next_node_id()
                             self._make_node(in_node_id,in_value, file_role, lang, dialog_nodes, ref_ids)
                             in_keys_list = [k.strip() for k in in_keys.split(';')]
                             for in_key in in_keys_list:
-                                node["cmd_triggers"][in_key] = in_node_id
-                    case "cmd_id":
-                        self._setHandlerToNode(HandlerTypes.CMD, lang, value, node)
-                    case "cmd_exit_id":
-                        self._setHandlerToNode(HandlerTypes.CMD_EXIT, lang, value, node)
-                    case "answer_id":
-                        self._setHandlerToNode(HandlerTypes.ANSWER, lang, value, node)
-                    case "message_preprocess_id":
-                        self._setHandlerToNode(HandlerTypes.MESSAGE_PREPROCESS, lang, value, node)
-                    case "freeInput_id":
-                        self._setHandlerToNode(HandlerTypes.FREE_INPUT, lang, value, node)
+                                node["switch_triggers"][in_key] = in_node_id
+                    case key if key in HANDLER_TYPE_MAP:
+                        handler_type = HANDLER_TYPE_MAP[key]
+                        handler = self._handlers.get(handler_type, {}).get(lang, {}).get(value)
+                        if not handler:
+                            handler = self._handlers.get(handler_type, {}).get(Language.ANY, {}).get(value)
+                        if handler:
+                            node[handler_type.value] = handler
+                        else:
+                            logger.warning(
+                                LogZone.YAML,
+                                f"{handler_type.value} '{value}' was missed for {node.get('id')} node in {lang}"
+                            )
                     case "ref_id":
                         ref_ids[value] = node_id
                     case _:
                         node[key] = value
             dialog_nodes[node_id] = node
-
-    def _setHandlerToNode(self, handlerType:HandlerTypes, lang: Language, ID, node):
-        handler = self._handlers.get(handlerType, {}).get(lang, {}).get(ID)
-        if not handler:
-            handler = self._handlers.get(handlerType, {}).get(Language.ANY, {}).get(ID)
-        if handler:
-            node[handlerType.value] = handler
-        else:
-            logger.warning(LogZone.YAML, f"{handlerType.value} '{ID}' was missed for {node.get("id")} node in {lang}")

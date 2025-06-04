@@ -7,31 +7,37 @@ triggers:
         text: "what kind of info u would add?"
         triggers:
             - name:
-                freeInput_id: "enterName"
+                input_parse_id: "enterName"
+                input_switch_id: "enterName"
                 text: "enter ur name"
-                cmd_triggers:
+                switch_triggers:
                     - good:
                         text: "name accepted"
+                        open_user_id: "enterName"
                         ref: -2
                     - bad:
                         text: "bad name"
                         ref: -1
             - surname:
-                freeInput_id: "enterSurName"
+                input_parse_id: "enterSurName"
+                input_switch_id: "enterSurName"
                 text: "enter ur surname"
-                cmd_triggers:
+                switch_triggers:
                     - good:
                         text: "surname accepted"
+                        open_user_id: "enterSurName"
                         ref: -2
                     - bad:
                         text: "bad surname"
                         ref: -1
             - lastname:
-                freeInput_id: "enterLastName"
+                input_parse_id: "enterLastName"
+                input_switch_id: "enterLastName"
                 text: "enter ur lastname"
-                cmd_triggers:
+                switch_triggers:
                     - good:
                         text: "lastname accepted"
+                        open_user_id: "enterSurName"
                         ref: -2
                     - bad:
                         text: "bad lastname"
@@ -43,4 +49,4 @@ triggers:
                 ref: "AddPInfo"
             - write msg:
                 cmd_id: "supportMessage"
-                text: "*recomindations*"
+                text: "*recommendations*"

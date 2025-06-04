@@ -1,49 +1,48 @@
 triggers:
   - назад:
       ref: -2
-  - главная; /start:
+  - главная; =/start:
       ref: 0
-  - привет:
-      cmd_id: "hi"
-      text: "привет"
-      ref: -1
-  - смена языка:
-      text: "выберете язык"
+  - сменить язык:
+      text: "выберите язык"
       triggers:
-        - ru:
-            cmd_id: "toRu"
+        - русский:
+            open_user_id: "toRu"
             ref: -2
-        - en:
-            cmd_id: "toEn"
+        - английский:
+            open_user_id: "toEn"
             ref: -2
-        - ua:
-            cmd_id: "toUa"
+        - украинский:
+            open_user_id: "toUa"
             ref: -2
-  - сменить роль; роль:
+  - сменить роль; =роль:
       ref_id: "changeRole"
       text: "выберите роль"
       triggers:
         - пользователь:
-            cmd_id: "changeRoleToUser"
-            cmd_triggers:
+            open_user_id: "changeRoleToUser"
+            open_switch_id: "changeRoleRes"
+            switch_triggers:
               - forbidden:
-                  text: "у вас нет на это прав"
+                  text: "u dont have permission"
                   ref: -2
               - allowed:
                   ref: 0
         - админ:
-            cmd_id: "changeRoleToAdmin"
-            cmd_triggers:
+            open_user_id: "changeRoleToAdmin"
+            open_switch_id: "changeRoleRes"
+            switch_triggers:
               - forbidden:
-                  text: "у вас нет на это прав"
+                  text: "u dont have permission"
                   ref: -2
               - allowed:
                   ref: 0
         - поддержка:
-            cmd_id: "changeRoleToSupport"
-            cmd_triggers:
+            open_user_id: "changeRoleToSupport"
+            open_switch_id: "changeRoleRes"
+            switch_triggers:
               - forbidden:
-                  text: "у вас нет на это прав"
+                  text: "u dont have permission"
                   ref: -2
               - allowed:
                   ref: 0
