@@ -38,7 +38,7 @@ async def main():
     }
 
     userDB = MongoUserDB(config["database"]["uri"], config["database"]["name"])
-    user_manager = UserManager(userDB)
+    user_manager = UserManager(userDB, config["cache"]["size"])
 
     bUserParser = BUserParser(user_manager)
 

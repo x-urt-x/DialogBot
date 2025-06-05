@@ -7,11 +7,12 @@ from data_base.IUserDB import IDataBase
 from models.user import User
 from zonelogger import logger, LogZone
 from enums.apiIDs import ApiId
+from core.userCache import UserCache
 
 class UserManager:
-    _users : dict[tuple[ApiId, str], User]= {}
-    def __init__(self, db:IDataBase):
+    def __init__(self, db:IDataBase, cache_size):
         self._db : IDataBase = db
+        self._users = UserCache(cache_size)
 
     async def getUserOrCreate(self, api:ApiId, ID) -> User:
         user = await self.getUser(api, ID)
@@ -58,7 +59,16 @@ class UserManager:
             if not (roles & role):
                 user.role = roles & -roles
         await self.save_users_dirty(user)
-        self._users.pop((api, ID))
+        self._users.remove((api, ID))
+
+    def remove_user_from_cache(self, key: tuple):
+        del self._users[key]
+
+    def clear_user_cache(self):
+        self._users.clear()
+
+    def dump_user_cache(self) -> dict:
+        return dict(self._users._cache)
 
     @staticmethod
     def serialize(raw: dict[str, Any]) -> dict[str, Any]:
