@@ -20,7 +20,7 @@ class DialogNodeHandlersManager:
 
     def __init__(self, handler_package: str):
         self._registry: dict[HandlerTypes, dict[Language, dict[str, Callable[..., Awaitable[Any]]]]] = defaultdict(lambda: defaultdict(dict))
-        self._handler_package = handler_package
+        self._handler_package = handler_package.replace("/", ".").replace("\\", ".")
         self._autoload_handlers()
         self._process_buffer()
 
