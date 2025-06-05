@@ -6,6 +6,7 @@ from collections import deque
 class User:
     def __init__(self, api: ApiId, ID: str):
         self._api = {}
+        self._info = {}
         self._tmp = {}
         self._data = {
             "ID": ID,
@@ -16,7 +17,8 @@ class User:
         }
         self._dirty: dict[str,set[str]] = {
             "api": set(),
-            "data": set()
+            "data": set(),
+            "info": set()
         }
 
 
@@ -114,18 +116,34 @@ class User:
         self._api[key] = val
         self._setDirty("data", key)
 
+    @property
+    def info(self):
+        return self._info
+
+    def infoDataGet(self, key: str):
+        return self._info.get(key)
+
+    def infoDataSet(self, key: str, val):
+        if self._info.get(key) == val:
+            return
+        self._info[key] = val
+        self._setDirty("info", key)
+
     def get_dirty_fields(self) -> dict:
-        result = {"data":{},"api":{}}
+        result = {"data":{},"api":{}, "info":{}}
         for key in self._dirty["data"]:
             if key in self._data:
                 result["data"][key] = self._data[key]
         for key in self._dirty["api"]:
             if key in self._api:
                 result["api"][key] = self._api[key]
+        for key in self._dirty["info"]:
+            if key in self._info:
+                result["info"][key] = self._info[key]
         return result
 
     def to_dict(self) -> dict:
-        return {"data":self._data,"api":self._api}
+        return {"data":self._data,"api":self._api, "info":self._info}
 
     def from_dict(self, raw_data: dict):
         api = raw_data.get("api")
@@ -134,3 +152,6 @@ class User:
         data = raw_data.get("data")
         if data is not None:
             self._data = data
+        info = raw_data.get("info")
+        if info is not None:
+            self._info = info

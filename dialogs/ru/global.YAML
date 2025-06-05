@@ -54,3 +54,6 @@ triggers:
       - {{ r }}{% endfor %}
       Вы используете API: {{ api }}
       Системное время: {{ system.now }}
+      
+      Дополнительная Информация:{% for key, value in info_fields.items() %}
+            {{ key }}: {{ value }}{% endfor %}

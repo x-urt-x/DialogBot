@@ -25,6 +25,7 @@ class TemplateProcessor:
             "roles": TemplateProcessor._roles_to_list(user.roles),
             "api_fields": user.api_data,
             "tmp_fields": user.tmp,
+            "info_fields": user.info,
             "system": {
                 "now": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M"),
                 "utc": datetime.now(timezone.utc).isoformat(),

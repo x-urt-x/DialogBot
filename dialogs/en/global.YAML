@@ -54,3 +54,6 @@ triggers:
       - {{ r }}{% endfor %}
       You are using the API: {{ api }}
       System time: {{ system.now }}
+
+      Additional information:{% for key, value in info_fields.items() %}
+      {{ key }}: {{ value }}{% endfor %}
