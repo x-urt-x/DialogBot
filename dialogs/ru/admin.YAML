@@ -1,27 +1,27 @@
 text: "с возвращением, Админ"
 triggers:
-  - установить роль:
-      input_parse_id: "setRoleUser"
-      input_user_id: "setRoleUser"
-      input_switch_id: "setRoleUser"
-      text: "введите ID пользователя"
-      triggers:
-        - -сменить роль; -роль; =главная; -сменить язык:
-      switch_triggers:
-        - good:
-            text: "выберите роль"
-            input_parse_id: "setRoleRole"
-            input_user_id: "setRoleRole"
-            input_switch_id: "setRoleRole"
-            triggers:
-              - -сменить роль; -роль; =главная:
-            switch_triggers:
-              - good:
-                  text: "готово"
-                  ref: -3
-              - bad:
-                  text: "что-то пошло не так"
-                  ref: -3
-        - bad:
-            text: "пользователь не найден"
-            ref: -1
+  установить роль:
+    input_parse_id: "setRoleUser"
+    input_user_id: "setRoleUser"
+    input_switch_id: "setRoleUser"
+    text: "введите ID пользователя"
+    triggers:
+      -сменить роль; -роль; =главная; -сменить язык:
+    switch_triggers:
+      good:
+        text: "выберите роль"
+        input_parse_id: "setRoleRole"
+        input_user_id: "setRoleRole"
+        input_switch_id: "setRoleRole"
+        triggers:
+          -сменить роль; -роль; =главная:
+        switch_triggers:
+          good:
+            text: "готово"
+            ref: -3
+          bad:
+            text: "что-то пошло не так"
+            ref: -3
+      bad:
+        text: "пользователь не найден"
+        ref: -1

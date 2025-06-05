@@ -77,12 +77,7 @@ class YAMLLoader:
                 match key:
                     case "triggers":
                         node["triggers"] = {}
-                        for trigger in value:
-                            if trigger:
-                                [(in_keys, in_value)] = trigger.items()
-                            else:
-                                continue
-
+                        for in_keys, in_value in value.items():
                             in_node_id = None
                             if in_value is not None:
                                 in_node_id = self._get_next_node_id()
@@ -104,8 +99,7 @@ class YAMLLoader:
                                 node["triggers"][clean_key] = (in_node_id, visibility)
                     case "switch_triggers":
                         node["switch_triggers"] = {}
-                        for cmd_trigger in value:
-                            [(in_keys, in_value)] = cmd_trigger.items()
+                        for in_keys, in_value in value.items():
                             in_node_id = self._get_next_node_id()
                             self._make_node(in_node_id,in_value, file_role, lang, dialog_nodes, ref_ids)
                             in_keys_list = [k.strip() for k in in_keys.split(';')]

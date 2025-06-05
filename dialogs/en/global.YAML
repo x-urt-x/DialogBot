@@ -1,50 +1,56 @@
 triggers:
-  - back:
-      ref: -2
-  - main; =/start:
-      ref: 0
-  - change lang:
-      text: "select lang"
-      triggers:
-        - ru:
-            open_user_id: "toRu"
+  back:
+    ref: -2
+  main; =/start:
+    ref: 0
+  change lang:
+    text: "select lang"
+    triggers:
+      ru:
+        open_user_id: "toRu"
+        ref: 0
+      en:
+        open_user_id: "toEn"
+        ref: 0
+      ua:
+        open_user_id: "toUa"
+        ref: 0
+  change role; =role:
+    ref_id: "changeRole"
+    text: "select role"
+    triggers:
+      user:
+        open_user_id: "changeRoleToUser"
+        open_switch_id: "changeRoleRes"
+        switch_triggers:
+          forbidden:
+            text: "u dont have permission"
+            ref: -2
+          allowed:
             ref: 0
-        - en:
-            open_user_id: "toEn"
+      admin:
+        open_user_id: "changeRoleToAdmin"
+        open_switch_id: "changeRoleRes"
+        switch_triggers:
+          forbidden:
+            text: "u dont have permission"
+            ref: -2
+          allowed:
             ref: 0
-        - ua:
-            open_user_id: "toUa"
+      support:
+        open_user_id: "changeRoleToSupport"
+        open_switch_id: "changeRoleRes"
+        switch_triggers:
+          forbidden:
+            text: "u dont have permission"
+            ref: -2
+          allowed:
             ref: 0
-  - change role; =role:
-      ref_id: "changeRole"
-      text: "select role"
-      triggers:
-        - user:
-            open_user_id: "changeRoleToUser"
-            open_switch_id: "changeRoleRes"
-            switch_triggers:
-              - forbidden:
-                  text: "u dont have permission"
-                  ref: -2
-              - allowed:
-                  ref: 0
-        - admin:
-            open_user_id: "changeRoleToAdmin"
-            open_switch_id: "changeRoleRes"
-            switch_triggers:
-              - forbidden:
-                  text: "u dont have permission"
-                  ref: -2
-              - allowed:
-                  ref: 0
-        - support:
-            open_user_id: "changeRoleToSupport"
-            open_switch_id: "changeRoleRes"
-            switch_triggers:
-              - forbidden:
-                  text: "u dont have permission"
-                  ref: -2
-              - allowed:
-                  ref: 0
-  - profile:
-      text: " Welcome back, {{ id }}!\nYour main role is: {{ role }}\nAdditional roles:\n{% for r in roles %}\n- {{ r }}\n{% endfor %}\nYou are using the API: {{ api }}\nSystem time: {{ system.now }}"
+  profile:
+    text: |
+      Welcome back, {{ id }}!
+      Your main role is: {{ role }}
+      Additional roles:{% for r in roles %}
+      - {{ r }}{% endfor %}
+      You are using the API: {{ api }}
+      System time: {{ system.now }}

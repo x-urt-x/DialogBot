@@ -1,52 +1,52 @@
 text: "welcome"
 triggers:
-    - info; about:
-        text: "i am university bot"
-    - add personal info:
-        ref_id: "AddPInfo"
-        text: "what kind of info u would add?"
-        triggers:
-            - name:
-                input_parse_id: "enterName"
-                input_switch_id: "enterName"
-                text: "enter ur name"
-                switch_triggers:
-                    - good:
-                        text: "name accepted"
-                        open_user_id: "enterName"
-                        ref: -2
-                    - bad:
-                        text: "bad name"
-                        ref: -1
-            - surname:
-                input_parse_id: "enterSurName"
-                input_switch_id: "enterSurName"
-                text: "enter ur surname"
-                switch_triggers:
-                    - good:
-                        text: "surname accepted"
-                        open_user_id: "enterSurName"
-                        ref: -2
-                    - bad:
-                        text: "bad surname"
-                        ref: -1
-            - lastname:
-                input_parse_id: "enterLastName"
-                input_switch_id: "enterLastName"
-                text: "enter ur lastname"
-                switch_triggers:
-                    - good:
-                        text: "lastname accepted"
-                        open_user_id: "enterSurName"
-                        ref: -2
-                    - bad:
-                        text: "bad lastname"
-                        ref: -1
-    - support:
-        text: "here u can get human support. u can add personal info for better answers"
-        triggers:
-            - add info:
-                ref: "AddPInfo"
-            - write msg:
-                cmd_id: "supportMessage"
-                text: "*recommendations*"
+  info; about:
+    text: "i am university bot"
+  add personal info:
+    ref_id: "AddPInfo"
+    text: "what kind of info u would add?"
+    triggers:
+      name:
+        input_parse_id: "enterName"
+        input_switch_id: "enterName"
+        text: "enter ur name"
+        switch_triggers:
+          good:
+            text: "name accepted"
+            open_user_id: "enterName"
+            ref: -2
+          bad:
+            text: "bad name"
+            ref: -1
+      surname:
+        input_parse_id: "enterSurName"
+        input_switch_id: "enterSurName"
+        text: "enter ur surname"
+        switch_triggers:
+          good:
+            text: "surname accepted"
+            open_user_id: "enterSurName"
+            ref: -2
+          bad:
+            text: "bad surname"
+            ref: -1
+      lastname:
+        input_parse_id: "enterLastName"
+        input_switch_id: "enterLastName"
+        text: "enter ur lastname"
+        switch_triggers:
+          good:
+            text: "lastname accepted"
+            open_user_id: "enterSurName"
+            ref: -2
+          bad:
+            text: "bad lastname"
+            ref: -1
+  support:
+    text: "here u can get human support. u can add personal info for better answers"
+    triggers:
+      add info:
+        ref: "AddPInfo"
+      write msg:
+        cmd_id: "supportMessage"
+        text: "*recommendations*"

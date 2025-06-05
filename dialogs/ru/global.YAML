@@ -1,48 +1,56 @@
 triggers:
-  - назад:
-      ref: -2
-  - главная; =/start:
-      ref: 0
-  - сменить язык:
-      text: "выберите язык"
-      triggers:
-        - русский:
-            open_user_id: "toRu"
+  назад:
+    ref: -2
+  главная; =/start:
+    ref: 0
+  сменить язык:
+    text: "выберите язык"
+    triggers:
+      русский:
+        open_user_id: "toRu"
+        ref: 0
+      английский:
+        open_user_id: "toEn"
+        ref: 0
+      украинский:
+        open_user_id: "toUa"
+        ref: 0
+  сменить роль; =роль:
+    ref_id: "changeRole"
+    text: "выберите роль"
+    triggers:
+      пользователь:
+        open_user_id: "changeRoleToUser"
+        open_switch_id: "changeRoleRes"
+        switch_triggers:
+          forbidden:
+            text: "u dont have permission"
+            ref: -2
+          allowed:
             ref: 0
-        - английский:
-            open_user_id: "toEn"
+      админ:
+        open_user_id: "changeRoleToAdmin"
+        open_switch_id: "changeRoleRes"
+        switch_triggers:
+          forbidden:
+            text: "u dont have permission"
+            ref: -2
+          allowed:
             ref: 0
-        - украинский:
-            open_user_id: "toUa"
+      поддержка:
+        open_user_id: "changeRoleToSupport"
+        open_switch_id: "changeRoleRes"
+        switch_triggers:
+          forbidden:
+            text: "u dont have permission"
+            ref: -2
+          allowed:
             ref: 0
-  - сменить роль; =роль:
-      ref_id: "changeRole"
-      text: "выберите роль"
-      triggers:
-        - пользователь:
-            open_user_id: "changeRoleToUser"
-            open_switch_id: "changeRoleRes"
-            switch_triggers:
-              - forbidden:
-                  text: "u dont have permission"
-                  ref: -2
-              - allowed:
-                  ref: 0
-        - админ:
-            open_user_id: "changeRoleToAdmin"
-            open_switch_id: "changeRoleRes"
-            switch_triggers:
-              - forbidden:
-                  text: "u dont have permission"
-                  ref: -2
-              - allowed:
-                  ref: 0
-        - поддержка:
-            open_user_id: "changeRoleToSupport"
-            open_switch_id: "changeRoleRes"
-            switch_triggers:
-              - forbidden:
-                  text: "u dont have permission"
-                  ref: -2
-              - allowed:
-                  ref: 0
+  профиль:
+    text: |
+      Добро пожаловать, {{ id }}!
+      Ваша основная роль: {{ role }}
+      Дополнительные роли:{% for r in roles %}
+      - {{ r }}{% endfor %}
+      Вы используете API: {{ api }}
+      Системное время: {{ system.now }}
