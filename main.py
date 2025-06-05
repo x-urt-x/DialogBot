@@ -12,30 +12,32 @@ from models.nodesDict import NodesRootIDs
 from models.messageAnswerQueue import MessageAnswerQueue
 from zonelogger import logger, LogZone
 from YAMLLoader import YAMLLoader
-from tgToken import tg_token
 from enums.languages import Language
 from enums.apiIDs import ApiId
 import asyncio
+import yaml
 
 async def main():
+    with open("config.yaml", "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
     logger.enable_zone(LogZone.USERS)
     logger.enable_zone(LogZone.TG_API)
     logger.enable_zone(LogZone.MESSAGE_PROCESS)
     logger.enable_zone(LogZone.DIALOG_HANDLERS)
     logger.enable_zone(LogZone.API_PROCES)
 
-
-    handlers_manager = DialogNodeHandlersManager("dialog_node_handlers")
+    handlers_manager = DialogNodeHandlersManager(config["handlers"]["folder"])
     handlers = handlers_manager.get_all()
     logger.info(LogZone.MAIN, handlers)
 
     dialogs_loader = YAMLLoader(handlers)
-    dialogs : dict[Language,NodesRootIDs] = {
-        Language.EN: dialogs_loader.load_folder("dialogs/en", Language.EN),
-        Language.RU: dialogs_loader.load_folder("dialogs/ru", Language.RU)
+    dialogs: dict[Language, NodesRootIDs] = {
+        Language(lang_code.lower()): dialogs_loader.load_folder(dialog_conf["folder"], Language(lang_code.lower()))
+        for lang_code, dialog_conf in config["dialogs"].items()
     }
 
-    userDB = MongoUserDB("localhost:27017", "dialog_bot")
+    userDB = MongoUserDB(config["database"]["uri"], config["database"]["name"])
     user_manager = UserManager(userDB)
 
     bUserParser = BUserParser(user_manager)
@@ -43,7 +45,10 @@ async def main():
     messageAnswerQueue : MessageAnswerQueue = MessageAnswerQueue()
     message_manager = MessageManager(dialogs, user_manager, messageAnswerQueue, bUserParser)
 
-    tg_api = TelegramApiManager(messageAnswerQueue, tg_token, "https://438f-193-179-66-167.ngrok-free.app" , "/webhook", 8000)
+    token = config["telegram"]["token"]
+    url = config["telegram"]["public_url"]
+    port = config["telegram"]["port"]
+    tg_api = TelegramApiManager(messageAnswerQueue, token, url, "/webhook", port)
     console_api = ConsoleApi(messageAnswerQueue)
     apiRegistry = ApiRegistry()
     apiRegistry.register(ApiId.TG,tg_api)

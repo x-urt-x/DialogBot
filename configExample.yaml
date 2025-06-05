@@ -1,0 +1,20 @@
+handlers:
+  folder: "dialog_node_handlers"
+
+dialogs:
+  en:
+      folder: "dialogs/en"
+  ru:
+      folder: "dialogs/ru"
+
+database:
+  uri: "mongodb://localhost:27017"
+  name: "dialogbot"
+
+telegram:
+  token: "example_token"
+  public_url: "https://example.com/bot"
+  port: 8080
+
+cache:
+  size: 128
