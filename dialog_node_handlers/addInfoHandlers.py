@@ -1,4 +1,4 @@
-from models.message import MessageView
+from models.message import Message
 from enums.apiIDs import ApiId
 from core.dialogNodeHandlersManager import DialogNodeHandlersManager as dh
 from core.handlerTypes import HandlerTypes as Ht
@@ -9,7 +9,7 @@ from core.userManager import UserManager
 from enums.roles import Roles
 
 @dh.reg(Ht.INPUT_PARSE, Language.ANY,"enterName")
-async def enterName_input_parser_handler(msg:MessageView):
+async def enterName_input_parser_handler(msg:Message):
     input_text = msg.text
     if len(input_text) > 2:
         return {"enterName":input_text.strip()}
@@ -30,7 +30,7 @@ async def enterName_input_switch_handler(tmp:dict,triggers:dict[str,int]):
     return triggers["bad"]
 
 @dh.reg(Ht.INPUT_PARSE, Language.ANY, "enterSurName")
-async def enterSurName_input_parser_handler(msg: MessageView):
+async def enterSurName_input_parser_handler(msg: Message):
     input_text = msg.text
     if len(input_text) > 2:
         return {"enterSurName": input_text.strip()}
@@ -49,7 +49,7 @@ async def enterSurName_input_switch_handler(tmp: dict, triggers: dict[str, int])
     return triggers["good"] if done else triggers["bad"]
 
 @dh.reg(Ht.INPUT_PARSE, Language.ANY, "enterLastName")
-async def enterLastName_input_parser_handler(msg: MessageView):
+async def enterLastName_input_parser_handler(msg: Message):
     input_text = msg.text
     if len(input_text) > 2:
         return {"enterLastName": input_text.strip()}
