@@ -12,7 +12,10 @@ from enums.languages import Language
 class TelegramApiManager(IApiSender, IApiLifecycle):
     async def send(self, answer: Answer):
         keyboard = []
-        payload = {"chat_id": answer.to_ID}
+        payload = {
+            "chat_id": answer.to_ID,
+            "parse_mode": "HTML"
+        }
         if answer.text:
             payload["text"] = "\n\n".join(msg for msg in answer.text if msg)
         else:
@@ -23,7 +26,7 @@ class TelegramApiManager(IApiSender, IApiLifecycle):
             payload["reply_markup"] = {
                 "keyboard": keyboard,
                 "resize_keyboard": True,
-                "one_time_keyboard": True
+                "one_time_keyboard": True,
             }
         async with httpx.AsyncClient() as client:
             await client.post(f"{self._api_url}/sendMessage", json=payload)
