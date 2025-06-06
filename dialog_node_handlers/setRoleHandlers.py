@@ -1,4 +1,4 @@
-from models.message import MessageView
+from models.message import Message
 from enums.apiIDs import ApiId
 from core.dialogNodeHandlersManager import DialogNodeHandlersManager as dh
 from core.handlerTypes import HandlerTypes as Ht
@@ -10,7 +10,7 @@ from enums.roles import Roles
 
 
 @dh.reg(Ht.INPUT_PARSE, Language.ANY, "setRoleUser")
-async def setRoleUser_input_parse_handler(msg: MessageView):
+async def setRoleUser_input_parse_handler(msg: Message):
     user_input = msg.text
     try:
         parts = user_input.strip().split()
@@ -49,7 +49,7 @@ async def setRoleUser_input_switch_handler(tmp: dict, triggers: dict[str, int]):
         return triggers["bad"]
 
 @dh.reg(Ht.INPUT_PARSE, Language.ANY, "setRoleRole")
-async def setRoleRole_input_parse_handler(msg: MessageView):
+async def setRoleRole_input_parse_handler(msg: Message):
     bit_str = msg.text
     if not all(c in '01' for c in bit_str):
         logger.info(LogZone.USERS, f"Invalid role bit string (invalid characters): {bit_str}")

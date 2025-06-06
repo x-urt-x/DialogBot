@@ -1,4 +1,4 @@
-from models.message import Message, MessageView
+from models.message import Message
 from models.user import User
 from models.answer import Answer
 from models.nodesDict import NodesRootIDs
@@ -17,6 +17,7 @@ class MessageManager:
         self._userManager = userManager
         self._messageAnswerQueue = messageAnswerQueue
         self._bUserParser = bUserParser
+        self._back = False
 
     async def process_queue(self):
         if self._messageAnswerQueue.incoming.empty():
@@ -76,8 +77,7 @@ class MessageManager:
         #INPUT_MSG
         input_msg_handler = current_node.get(Ht.INPUT_MSG)
         if input_msg_handler:
-            res = await input_msg_handler(MessageView(message, can_edit_text=True))
-            MessageManager._deep_merge(user.tmp, res)
+            await input_msg_handler(message)
 
         #triggers
         if clean_combined_triggers:
@@ -88,7 +88,7 @@ class MessageManager:
         #INPUT_PARSE
         input_parse_handler = current_node.get(Ht.INPUT_PARSE.value)
         if input_parse_handler:
-            res = await input_parse_handler(MessageView(message))
+            res = await input_parse_handler(message)
             MessageManager._deep_merge(user.tmp, res)
 
         #INPUT_USER
@@ -170,6 +170,9 @@ class MessageManager:
         if ref_id is None:
             ref_id = new_node.get("ref")
         if ref_id is not None:
+            if self._back:
+                self._back = False
+                ref_id = -1
             if ref_id > 0:
                 await self._openNode(user, ref_id, answer)
             else:
@@ -179,6 +182,7 @@ class MessageManager:
                 else:
                     if -ref_id < user.stackLen():
                         back_to_node_id = user.stackPopN((-ref_id)+1)
+                        self._back = True
                     else:
                         user.stackClear()
                         back_to_node_id = -1

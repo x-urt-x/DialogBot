@@ -1,4 +1,4 @@
-from models.message import MessageView
+from models.message import Message
 from enums.apiIDs import ApiId
 from core.dialogNodeHandlersManager import DialogNodeHandlersManager as dh
 from core.handlerTypes import HandlerTypes as Ht
@@ -9,7 +9,7 @@ from core.userManager import UserManager
 from enums.roles import Roles
 
 @dh.reg(Ht.INPUT_PARSE, Language.ANY, "clearCache")
-async def clearCache_input_parse_handler(msg: MessageView):
+async def clearCache_input_parse_handler(msg: Message):
     user_input = msg.text
     try:
         parts = user_input.strip().split()
