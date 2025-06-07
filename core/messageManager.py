@@ -122,16 +122,16 @@ class MessageManager:
             user_role = user.role
             if node_role != user_role:
                 user_roles : Roles = user.roles
-                if user_roles & Roles(node_role):
-                    if node_role != Roles.GLOBAL:
+                if node_role != Roles.GLOBAL:
+                    if user_roles & Roles(node_role):
                         user.role = node_role
                         res = user.stackToRoot(rootIDs)
                         if not res:
                             logger.warning(LogZone.MESSAGE_PROCESS, f"no root for {user.role}")
-                else:
-                    answer.text.append("u dont have permission")
-                    logger.info(LogZone.MESSAGE_PROCESS, f"user {user.api}:{user.ID} tres get access to {new_node_id} node")
-                    return
+                    else:
+                        answer.text.append("u dont have permission")
+                        logger.info(LogZone.MESSAGE_PROCESS, f"user {user.api}:{user.ID} tres get access to {new_node_id} node")
+                        return
         user.stackAppend(new_node_id)
 
         triggers = new_node.get("triggers", {})

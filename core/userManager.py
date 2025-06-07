@@ -58,6 +58,7 @@ class UserManager:
         if roles != 0:
             if not (roles & role):
                 user.role = roles & -roles
+                user.stackClear()
         await self.save_users_dirty(user)
         self._users.remove((api, ID))
 

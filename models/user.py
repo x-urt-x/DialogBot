@@ -12,7 +12,7 @@ class User:
             "ID": ID,
             "api": api,
             "role": Roles.USER,
-            "roles": Roles.USER | Roles.GLOBAL,
+            "roles": Roles.USER,
             "stack": deque(),
         }
         self._dirty: dict[str,set[str]] = {
@@ -88,6 +88,7 @@ class User:
 
     def stackClear(self):
         self._data["stack"].clear()
+        self._setDirty("data", "stack")
 
     def stackToRoot(self, roots) ->int | None:
         stack = self._data["stack"]
