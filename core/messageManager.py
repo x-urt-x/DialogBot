@@ -54,6 +54,7 @@ class MessageManager:
         else:
             user.stackPopN(1)
             await self._openNode(user,current_node_id, answer)
+        self._back = False
         await self._userManager.save_users_dirty(user)
         answer.text = TemplateProcessor.render_all(answer.text, user, message)
         return answer
@@ -154,7 +155,7 @@ class MessageManager:
         text = new_node.get("text")
         open_text_handler = new_node.get(Ht.OPEN_TEXT.value)
         if open_text_handler:
-            text = await open_text_handler(text)
+            text = await open_text_handler(user.tmp, text)
         if text is None:
             text = ""
 

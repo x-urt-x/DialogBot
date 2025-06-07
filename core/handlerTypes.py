@@ -16,7 +16,7 @@ class HandlerTypes(Enum):
 HandlerSignatures: dict[HandlerTypes, list[type]] = {
     HandlerTypes.OPEN_SWITCH:  [dict, dict[str, int]],  # tmp, triggers
     HandlerTypes.INPUT_SWITCH: [dict, dict[str, int]],  # tmp, triggers
-    HandlerTypes.OPEN_TEXT:    [str],   # text
+    HandlerTypes.OPEN_TEXT:    [dict, str],   # tmp, text
     HandlerTypes.INPUT_MSG:    ['Message'],  # msg
     HandlerTypes.INPUT_PARSE:  ['Message'],  # msg
     HandlerTypes.INPUT_USER:   ['User', 'UserManager'], # user, user_manager
