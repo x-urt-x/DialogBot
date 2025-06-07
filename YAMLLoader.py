@@ -78,6 +78,7 @@ class YAMLLoader:
                     case "triggers":
                         node["triggers"] = {}
                         for in_keys, in_value in value.items():
+                            in_keys = str(in_keys)
                             in_node_id = None
                             if in_value is not None:
                                 in_node_id = self._get_next_node_id()
@@ -100,6 +101,7 @@ class YAMLLoader:
                     case "switch_triggers":
                         node["switch_triggers"] = {}
                         for in_keys, in_value in value.items():
+                            in_keys = str(in_keys)
                             in_node_id = self._get_next_node_id()
                             self._make_node(in_node_id,in_value, file_role, lang, dialog_nodes, ref_ids)
                             in_keys_list = [k.strip() for k in in_keys.split(';')]

@@ -1,6 +1,7 @@
 text: "с возвращением, Админ"
 triggers:
   установить роль:
+    no_back_stop: 1
     input_parse_id: "setRoleUser"
     input_user_id: "setRoleUser"
     input_switch_id: "setRoleUser"

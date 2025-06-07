@@ -164,8 +164,12 @@ class MessageManager:
         if open_switch_handler:
             ref_id = await open_switch_handler(user.tmp, switch_triggers)
 
-        answer.text.append(text)
-        answer.hints = list(clean_combined_triggers.keys())
+        no_back_stop = new_node.get("no_back_stop", None)
+        if self._back and (no_back_stop is not None):
+            ref_id = -1
+        else:
+            answer.text.append(text)
+            answer.hints = list(clean_combined_triggers.keys())
 
         if ref_id is None:
             ref_id = new_node.get("ref")
