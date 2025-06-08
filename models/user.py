@@ -115,7 +115,7 @@ class User:
         if self._api.get(key) == val:
             return
         self._api[key] = val
-        self._setDirty("data", key)
+        self._setDirty("api", key)
 
     @property
     def info(self):
