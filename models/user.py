@@ -20,6 +20,8 @@ class User:
             "data": set(),
             "info": set()
         }
+        self.dirty_force = False
+        self._stack_hash: tuple[int, ...] = ()
 
 
     def _setDirty(self, section, key: str):
@@ -100,6 +102,9 @@ class User:
         self._setDirty("data", "stack")
         return root_id
 
+    def fixCurrentStack(self):
+        self._stack_hash = hash(tuple(self._data["stack"]))
+
     @property
     def tmp(self):
         return self._tmp
@@ -129,6 +134,13 @@ class User:
             return
         self._info[key] = val
         self._setDirty("info", key)
+
+    def is_dirty(self) -> bool:
+        for section, fields in self._dirty.items():
+            for field in fields:
+                if not (section == "data" and field == "stack"):
+                    return True
+        return self._stack_hash != hash(tuple(self._data["stack"]))
 
     def get_dirty_fields(self) -> dict:
         result = {"data":{},"api":{}, "info":{}}

@@ -20,6 +20,7 @@ async def enterName_input_user_handler(user: User, user_manager: UserManager):
     name = user.tmp.pop("enterName")
     if name:
         user.infoDataSet("name", name)
+        user.dirty_force = True
         user.tmp["enterNameDone"] = True
 
 @dh.reg(Ht.INPUT_SWITCH, Language.ANY, "enterName")
@@ -41,6 +42,7 @@ async def enterSurName_input_user_handler(user: User, user_manager: UserManager)
     surname = user.tmp.pop("enterSurName", None)
     if surname:
         user.infoDataSet("surname", surname)
+        user.dirty_force = True
         user.tmp["enterSurNameDone"] = True
 
 @dh.reg(Ht.INPUT_SWITCH, Language.ANY, "enterSurName")
@@ -60,6 +62,7 @@ async def enterLastName_input_user_handler(user: User, user_manager: UserManager
     lastname = user.tmp.pop("enterLastName", None)
     if lastname:
         user.infoDataSet("lastname", lastname)
+        user.dirty_force = True
         user.tmp["enterLastNameDone"] = True
 
 @dh.reg(Ht.INPUT_SWITCH, Language.ANY, "enterLastName")

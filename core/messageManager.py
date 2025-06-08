@@ -55,7 +55,7 @@ class MessageManager:
             user.stackPopN(1)
             await self._openNode(user,current_node_id, answer)
         self._back = False
-        await self._userManager.save_users_dirty(user)
+        await self._userManager.trySaveUserDirty(user)
         answer.text = TemplateProcessor.render_all(answer.text, user, message)
         return answer
 

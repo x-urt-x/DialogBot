@@ -1,6 +1,7 @@
 from data_base.MongoUserDB import MongoUserDB
 from core.dialogNodeHandlersManager import DialogNodeHandlersManager
 from core.userManager import UserManager
+from core.userRepository import UserRepository
 from core.messageManager import MessageManager
 from core.bUserParser import BUserParser
 from boundary.api_handlers.telegramApi import TelegramApiManager
@@ -16,6 +17,7 @@ from enums.languages import Language
 from enums.apiIDs import ApiId
 import asyncio
 import yaml
+
 
 async def main():
     with open("config.yaml", "r", encoding="utf-8") as f:
@@ -39,7 +41,8 @@ async def main():
     }
 
     userDB = MongoUserDB(config["database"]["uri"], config["database"]["name"])
-    user_manager = UserManager(userDB, config["cache"]["size"])
+    user_repository = UserRepository(userDB)
+    user_manager = UserManager(user_repository, config["cache"]["size"], config["cache"]["save_interval"])
 
     bUserParser = BUserParser(user_manager)
 
@@ -57,7 +60,7 @@ async def main():
 
     apiManager = ApiManager(apiRegistry)
     apiSendManager = ApiSendManager(messageAnswerQueue, apiRegistry, user_manager)
-
+    user_manager.run_sync_loop()
     await apiManager.run_all()
     print("Telegram API started. Press Ctrl+C to stop.")
     try:
@@ -69,6 +72,7 @@ async def main():
     except KeyboardInterrupt:
         print("Shutting down...")
         await apiManager.stop_all()
+        await user_manager.stop_sync_loop()
 
 
 if __name__ == "__main__":

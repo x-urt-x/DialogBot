@@ -38,14 +38,14 @@ async def changeRoleRes_handler(tmp: dict, triggers: dict[str, int]):
 @dh.reg(Ht.OPEN_USER, Language.ANY, "toRu")
 async def toRu_handler(user: User, user_manager: UserManager):
     user.lang = Language.RU
-    await user_manager.save_users_dirty(user)
+    user.dirty_force = True
 
 @dh.reg(Ht.OPEN_USER, Language.ANY, "toEn")
 async def toEn_handler(user: User, user_manager: UserManager):
     user.lang = Language.EN
-    await user_manager.save_users_dirty(user)
+    user.dirty_force = True
 
 @dh.reg(Ht.OPEN_USER, Language.ANY, "toUa")
 async def toUa_handler(user: User, user_manager: UserManager):
     user.lang = Language.EN #does not support yet
-    await user_manager.save_users_dirty(user)
+    user.dirty_force = True
