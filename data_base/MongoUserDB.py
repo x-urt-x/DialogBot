@@ -14,6 +14,7 @@ class MongoUserDB(IDataBase):
 
     async def getUserData(self, api: ApiId, ID)-> dict | None:
         user_api_id = f"{api.value}:{ID}"
+        logger.debug(LogZone.DB, f"get user {user_api_id}")
         try:
             data = await self._users.find_one({"api_id": user_api_id})
         except PyMongoError as e:
@@ -26,6 +27,7 @@ class MongoUserDB(IDataBase):
 
     async def createUser(self, api: ApiId, ID, data : dict):
         user_api_id = f"{api.value}:{ID}"
+        logger.debug(LogZone.DB, f"create user {user_api_id}")
         try:
             existing = await self._users.find_one({"api_id": user_api_id})
             if existing:
@@ -41,6 +43,7 @@ class MongoUserDB(IDataBase):
 
     async def updateUserData(self, api: ApiId, ID, set_data: dict, unset_data: dict):
         user_api_id = f"{api.value}:{ID}"
+        logger.debug(LogZone.DB, f"update user {user_api_id}")
         if not set_data and not unset_data:
             return
 

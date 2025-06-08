@@ -21,11 +21,12 @@ async def main():
     with open("config.yaml", "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    logger.enable_zone(LogZone.USERS)
+    logger.enable_zone(LogZone.DB)
+    #logger.enable_zone(LogZone.USERS)
     logger.enable_zone(LogZone.TG_API)
     logger.enable_zone(LogZone.MESSAGE_PROCESS)
     logger.enable_zone(LogZone.DIALOG_HANDLERS)
-    logger.enable_zone(LogZone.API_PROCES)
+    #logger.enable_zone(LogZone.API_PROCES)
 
     handlers_manager = DialogNodeHandlersManager(config["handlers"]["folder"])
     handlers = handlers_manager.get_all()
