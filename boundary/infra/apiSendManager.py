@@ -13,10 +13,14 @@ class ApiSendManager:
         self._registry = registry
         self._user_manager = user_manager
 
-    async def process_queue(self):
-        if self._queue.empty():
-            return
+    async def loop(self):
+        while True:
+            try:
+                await self._process_queue()
+            except Exception:
+                logger.exception("error on ApiSend")
 
+    async def _process_queue(self):
         answer: Answer = await self._queue.get()
         api_id = ApiId(answer.to_api)
         if answer.to_ID is None:

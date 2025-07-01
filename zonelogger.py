@@ -88,4 +88,6 @@ class ZoneLogger:
     def critical(self, zone: LogZone, msg: str, *args, **kwargs):
         self.logger.critical(self._format("CRITICAL", zone, msg), *args, **kwargs)
 
+    def exception(self, msg: str, *args, **kwargs):
+        self.logger.exception(msg, *args, **kwargs)
 logger = ZoneLogger()

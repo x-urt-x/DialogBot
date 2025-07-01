@@ -62,15 +62,21 @@ async def main():
     apiSendManager = ApiSendManager(messageAnswerQueue, apiRegistry, user_manager)
     user_manager.run_sync_loop()
     await apiManager.run_all()
+    tasks = [
+        asyncio.create_task(apiManager.loop(), name="apiManagerLoop"),
+        asyncio.create_task(message_manager.loop(), name="messageManagerLoop"),
+        asyncio.create_task(apiSendManager.loop(), name="apiSendManagerLoop"),
+    ]
     print("Telegram API started. Press Ctrl+C to stop.")
     try:
-        while True:
-            await apiManager.process_all()
-            await message_manager.process_queue()
-            await apiSendManager.process_queue()
-            await asyncio.sleep(0.001)
+        await asyncio.gather(*tasks)
     except KeyboardInterrupt:
         print("Shutting down...")
+        for task in tasks:
+            task.cancel()
+
+        await asyncio.gather(*tasks, return_exceptions=True)
+    finally:
         await apiManager.stop_all()
         await user_manager.stop_sync_loop()
 

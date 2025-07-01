@@ -19,18 +19,23 @@ class MessageManager:
         self._bUserParser = bUserParser
         self._back = False
 
-    async def process_queue(self):
-        if self._messageAnswerQueue.incoming.empty():
-            return
+    async def loop(self):
+        while True:
+            try:
+                await self._process_queue()
+            except Exception:
+                logger.exception("error on MessageManager")
+
+    async def _process_queue(self):
         bUser, message = await self._messageAnswerQueue.incoming.get()
         user = await self._bUserParser.parse(bUser)
         if not user:
             return
-        answer =  await self.process(user, message)
+        answer =  await self._process(user, message)
         if answer:
             await self._messageAnswerQueue.outgoing.put(answer)
 
-    async def process(self, user: User, message: Message)->Answer | None:
+    async def _process(self, user: User, message: Message)->Answer | None:
         answer = Answer()
         answer.to_ID = user.ID
         answer.to_api = user.api
