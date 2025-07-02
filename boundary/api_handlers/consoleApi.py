@@ -32,9 +32,7 @@ class ConsoleApi(IApiSender, IApiLifecycle):
                 logger.error(LogZone.API_PROCES, f"Console input error: {e}")
 
     async def process(self):
-        if not self._out_queue.empty():
-            answer: Answer = await self._out_queue.get()
-            await self.send(answer)
+        pass
 
     async def stop(self):
         self._running = False
